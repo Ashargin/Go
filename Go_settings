@@ -1,9 +1,6 @@
 import copy
 class settings : ###lignes 2-13 : Création de la classe settings pour l'attribution des variables utiles pour l'IA. Les autres variables qui ne servent qu'au joueur, le côté du joueur et le handicap, sont saisies au début de Go_main.py###
     def __init__(self):
-        print('Taille du goban?')
-        N=int(input())
-        self.N=N #taille du goban
         P=[[0 for i in range(N)] for j in range(N)]
         self.P=P #matrice d'état du plateau : 0 pour vide, 1 pour noir, 2 pour blanc
         self.Pos=[copy.deepcopy(P)] #liste des positions P déja atteintes (pour la règle du ko)
@@ -246,3 +243,50 @@ def partie_alea(var,joueur) : ###lignes 230-248 : simulation d'une partie entre 
         return(1) #Noir gagne
     elif var.Points[1]>var.Points[0] :
         return(2) #Blanc gagne
+
+def train_v1(n_parties,n_sim) :
+    D={}
+    for k in range(n_parties) :
+        var=settings()
+        var.N=N
+        while var.Cases!=[] : ###lignes 28-62 : déroulement de la partie###
+            if humain==1 : #si le joueur humain joue Noir
+                coup_1=coup_IA_v1(var,1) #coup du joueur
+                points_sup=coup_1[1]
+                while points_sup!=[] : #on lui ajoute ses points si il en a gagné
+                    points=points_sup[0]
+                    var.Points[0]=var.Points[0]+points
+                    print('Noir gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
+                    points_sup.remove(points)
+                if len(var.Cases)>=1 : #s'il reste une case vide pour l'IA
+                    coup_2=coup_IA_v1(var,IA,n_sim) #coup de l'IA
+                    print('IA : '+str(coup_2[0]))
+                    points_sup=coup_2[1]
+                    while points_sup!=[] : #on lui ajoute ses points
+                        points=points_sup[0]
+                        var.Points[1]=var.Points[1]+points
+                        print('Blanc gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
+                        points_sup.remove(points)
+            else : #si le joueur humain joue Blanc
+                coup_1=coup_IA_v1(var,IA,n_sim) #coup de l'IA
+                print('IA : '+str(coup_1[0]))
+                points_sup=coup_1[1]
+                while points_sup!=[] : #on lui ajoute ses points
+                    points=points_sup[0]
+                    var.Points[0]=var.Points[0]+points
+                    print('Noir gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
+                    points_sup.remove(points)
+                if len(Cases)>=1 : #s'il reste une case vide sur le joueur
+                    coup_2=coup_humain(var,humain) #coup du joueur
+                    points_sup=coup_2[1]
+                    while points_sup!=[] : #on lui ajoute ses points
+                        points=points_sup[0]
+                        var.Points[1]=var.Points[1]+points
+                        print('Blanc gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
+                        points_sup.remove(points)
+        if var.Points[0]>var.Points[1] : ###lignes 63-68 : comptage des fois et gagnant###
+            print('Noir gagne. '+str(var.Points[0])+' - '+str(var.Points[1]))
+        elif var.Points[1]>var.Points[0] :
+            print('Blanc gagne. '+str(var.Points[0])+' - '+str(var.Points[1]))
+        else :
+            print('Egalité') #en pratique ce cas n'arrive pas à cause du komi (voir Go_settings lignes 11-12) qui n'est volontairement pas entier
