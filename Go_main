@@ -1,5 +1,8 @@
 from Go_settings import* ###lignes 1-20 : initialisation###
 var=settings()
+print('Taille du goban?')
+N=int(input())
+self.N=N #taille du goban
 print(' ')
 print('Noir ou Blanc?') #De quel côté le joueur humain joue-t-il?
 humain=input()
