@@ -1,7 +1,10 @@
-from Go_settings import* ###lignes 1-20 : initialisation###
+from Go_settings import* ###initialisation###
 var=settings()
+print('Taille du goban?')
+N=int(input())
+var.N=N #taille du goban
 print(' ')
-print('Noir ou Blanc?') #De quel côté le joueur humain joue-t-il?
+print('Noir ou Blanc?') #se quel côté le joueur humain joue-t-il?
 humain=input()
 while humain not in ('Noir','noir','Noirs','noirs','Blanc','blanc','Blancs','blancs') :
     print('Joueur non reconnu.')
@@ -12,20 +15,20 @@ elif humain in ('Blanc','blanc','Blancs','blancs') :
     humain=2
 IA=3-humain
 print(' ')
-print('Nombre de simulations par coup pour l IA?') #On définit le nombre de simulationspar coup pour l'IA
+print('Nombre de simulations par coup pour l IA?') #on définit le nombre de simulationspar coup pour l'IA
 n_sim=int(input())
 print(' ')
-print('Handicap?') #Si on veut ajouter un handicap
+print('Handicap?') #si on veut ajouter un handicap
 handicap=int(input())
 c_handicap=0
-while var.Cases!=[] and c_handicap<handicap-1 : ###lignes 21-27 : phase d'handicap###
+while var.Cases!=[] and c_handicap<handicap-1 : ###phase d'handicap###
     if humain==1 :
         coup_humain(var,humain)
     else :
-        coup=coup_IA_v1(var,IA,n_sim)
+        coup=coup_IA_v1(var,IA,n_sim,0)
         print('IA : '+str(coup[0]))
     c_handicap=c_handicap+1
-while var.Cases!=[] : ###lignes 28-62 : déroulement de la partie###
+while var.Cases!=[] : ###déroulement de la partie###
     if humain==1 : #si le joueur humain joue Noir
         coup_1=coup_humain(var,humain) #coup du joueur
         points_sup=coup_1[1]
@@ -35,7 +38,7 @@ while var.Cases!=[] : ###lignes 28-62 : déroulement de la partie###
             print('Noir gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
             points_sup.remove(points)
         if len(var.Cases)>=1 : #s'il reste une case vide pour l'IA
-            coup_2=coup_IA_v1(var,IA,n_sim) #coup de l'IA
+            coup_2=coup_IA_v1(var,IA,n_sim,0) #coup de l'IA
             print('IA : '+str(coup_2[0]))
             points_sup=coup_2[1]
             while points_sup!=[] : #on lui ajoute ses points
@@ -44,7 +47,7 @@ while var.Cases!=[] : ###lignes 28-62 : déroulement de la partie###
                 print('Blanc gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
                 points_sup.remove(points)
     else : #si le joueur humain joue Blanc
-        coup_1=coup_IA_v1(var,IA,n_sim) #coup de l'IA
+        coup_1=coup_IA_v1(var,IA,n_sim,0) #coup de l'IA
         print('IA : '+str(coup_1[0]))
         points_sup=coup_1[1]
         while points_sup!=[] : #on lui ajoute ses points
@@ -60,9 +63,9 @@ while var.Cases!=[] : ###lignes 28-62 : déroulement de la partie###
                 var.Points[1]=var.Points[1]+points
                 print('Blanc gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
                 points_sup.remove(points)
-if var.Points[0]>var.Points[1] : ###lignes 63-68 : comptage des fois et gagnant###
+if var.Points[0]>var.Points[1] : ###comptage des fois et gagnant###
     print('Noir gagne. '+str(var.Points[0])+' - '+str(var.Points[1]))
 elif var.Points[1]>var.Points[0] :
     print('Blanc gagne. '+str(var.Points[0])+' - '+str(var.Points[1]))
 else :
-    print('Egalité') #en pratique ce cas n'arrive pas à cause du komi (voir Go_settings lignes 11-12) qui n'est volontairement pas entier
+    print('Egalité') #en pratique ce cas n'arrive pas à cause du komi qui n'est volontairement pas entier
