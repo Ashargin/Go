@@ -1,7 +1,8 @@
 import copy #pour les deepcopies
 import marshal #pour les sauvegardes locales
 class settings : ###création de la classe settings pour l'attribution des variables utiles pour l'IA. Les autres variables qui ne servent qu'au joueur, le côté du joueur et le handicap, sont saisies au début de Go_main.py###
-    def __init__(self):
+    def __init__(self,N) :
+        self.N=N #taille du goban
         P=[[0 for i in range(N)] for j in range(N)]
         self.P=P #matrice d'état du plateau : 0 pour vide, 1 pour noir, 2 pour blanc
         self.Pos=[copy.deepcopy(P)] #liste des positions P déja atteintes (pour la règle du ko)
@@ -282,8 +283,7 @@ def indice(P,joueur) : ###fonction pour faciliter l'écriture des indices pour l
 def train_v1(N,n_parties,n_sim) : ###pour simuler des parties aléatoires et sauvegarder les résultats localement###
     D=marshal.load(open('train_v1_'+str(N),'rb')) #on récupère les tests qu'on a déja faits s'il y en a pour ne pas les perdre
     for i in range(n_parties) :
-        var=settings() #on réinitialise var pour la partie suivante
-        var.N=N
+        var=settings(N) #on réinitialise var pour la partie suivante
         while var.Cases!=[] : ###déroulement de la partie###
             coup_1=coup_IA_v1_train(var,1,n_sim) #coup de Noir
             points_sup=coup_1[1]
