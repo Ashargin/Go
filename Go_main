@@ -25,12 +25,12 @@ while var.Cases!=[] and c_handicap<handicap-1 : ###phase d'handicap###
     if humain==1 :
         coup_humain(var,humain)
     else :
-        coup=coup_IA_v1(var,IA,n_sim,0)
+        coup=coup_IA_v1(var,IA)
         print('IA : '+str(coup[0]))
     c_handicap=c_handicap+1
 while var.Cases!=[] : ###déroulement de la partie###
     if humain==1 : #si le joueur humain joue Noir
-        coup_1=coup_humain(var,humain) #coup du joueur
+        coup_1=coup_humain(var,1) #coup du joueur
         points_sup=coup_1[1]
         while points_sup!=[] : #on lui ajoute ses points si il en a gagné
             points=points_sup[0]
@@ -38,7 +38,7 @@ while var.Cases!=[] : ###déroulement de la partie###
             print('Noir gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
             points_sup.remove(points)
         if len(var.Cases)>=1 : #s'il reste une case vide pour l'IA
-            coup_2=coup_IA_v1(var,IA,n_sim,0) #coup de l'IA
+            coup_2=coup_IA_v1(var,2) #coup de l'IA
             print('IA : '+str(coup_2[0]))
             points_sup=coup_2[1]
             while points_sup!=[] : #on lui ajoute ses points
@@ -47,7 +47,7 @@ while var.Cases!=[] : ###déroulement de la partie###
                 print('Blanc gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
                 points_sup.remove(points)
     else : #si le joueur humain joue Blanc
-        coup_1=coup_IA_v1(var,IA,n_sim,0) #coup de l'IA
+        coup_1=coup_IA_v1(var,1) #coup de l'IA
         print('IA : '+str(coup_1[0]))
         points_sup=coup_1[1]
         while points_sup!=[] : #on lui ajoute ses points
@@ -55,8 +55,8 @@ while var.Cases!=[] : ###déroulement de la partie###
             var.Points[0]=var.Points[0]+points
             print('Noir gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
             points_sup.remove(points)
-        if len(Cases)>=1 : #s'il reste une case vide sur le joueur
-            coup_2=coup_humain(var,humain) #coup du joueur
+        if len(var.Cases)>=1 : #s'il reste une case vide sur le joueur
+            coup_2=coup_humain(var,2) #coup du joueur
             points_sup=coup_2[1]
             while points_sup!=[] : #on lui ajoute ses points
                 points=points_sup[0]
