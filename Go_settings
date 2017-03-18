@@ -1,5 +1,6 @@
-import copy
-class settings : ###lignes 2-13 : Création de la classe settings pour l'attribution des variables utiles pour l'IA. Les autres variables qui ne servent qu'au joueur, le côté du joueur et le handicap, sont saisies au début de Go_main.py###
+import copy #pour les deepcopies
+import marshal #pour les sauvegardes locales
+class settings : ###création de la classe settings pour l'attribution des variables utiles pour l'IA. Les autres variables qui ne servent qu'au joueur, le côté du joueur et le handicap, sont saisies au début de Go_main.py###
     def __init__(self):
         P=[[0 for i in range(N)] for j in range(N)]
         self.P=P #matrice d'état du plateau : 0 pour vide, 1 pour noir, 2 pour blanc
@@ -11,7 +12,7 @@ class settings : ###lignes 2-13 : Création de la classe settings pour l'attribu
 
 from random import* #importation
 
-def coup_humain(var,humain) : ###lignes 17-54 : structure du coup du joueur humain###
+def coup_humain(var,humain) : ###structure du coup du joueur humain###
     test=1
     points_sup=[]
     for case in var.Cases :
@@ -50,7 +51,7 @@ def coup_humain(var,humain) : ###lignes 17-54 : structure du coup du joueur huma
             points_sup=jouer_coup(var,valide,ans,humain) #fonction jouer_coup en bas (partie 2 du coup)
     return(ans,points_sup)
 
-def coup_IA_alea(var,IA) : ###lignes 56-73 : structure du coup de l'IA (joue aléatoirement)###
+def coup_IA_alea(var,IA) : ###structure du coup de l'IA (joue aléatoirement)###
     Cases_copy=[k for k in var.Cases] #copie pour tester les cases valides sans modifer var.Cases
     n=int(random()*len(Cases_copy)) #case aléatoire
     coup=Cases_copy[n]
@@ -69,10 +70,11 @@ def coup_IA_alea(var,IA) : ###lignes 56-73 : structure du coup de l'IA (joue al�
         points_sup=jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
     return(ans,points_sup)
 
-def coup_IA_v1(var,IA,n_sim) : ###lignes 75-104 : structure du coup de l'IA###
+def coup_IA_v1(var,IA,n_sim,train_mode) : ###structure du coup de l'IA###
     meilleur_coup='' #meilleur coup retenu
     value=-1 #"valeur" de ce coup (% de victoire estimé après ce coup)
     points_sup=[]
+    D_coup={}
     for k in range(len(var.Cases)) :
         coup=var.Cases[k]
         valide=est_valide(var,coup,IA) #fonction est_valide en bas (partie 1 du coup)
@@ -88,6 +90,8 @@ def coup_IA_v1(var,IA,n_sim) : ###lignes 75-104 : structure du coup de l'IA###
                 var_2=copy.deepcopy(var_copy)
                 if partie_alea(var_2,3-IA)==IA :
                     c=c+1
+            if train_mode==1 : #si on veut sauvegarder et exporter les tests
+                D_coup[indice(var_copy.P,3-IA)]=n_sim-c
             if c>value : #si le coup est meilleur que celui qu'on avait retenu :
                 meilleur_coup=coup #il devient le meilleur coup
                 value=c
@@ -98,9 +102,12 @@ def coup_IA_v1(var,IA,n_sim) : ###lignes 75-104 : structure du coup de l'IA###
         valide_meilleur=est_valide(var,meilleur_coup,IA)
         ans=meilleur_coup
         points_sup=jouer_coup(var,valide_meilleur,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
-    return(ans,points_sup)
+    if train_mode==0 :
+        return(ans,points_sup)
+    else :
+        return(ans,points_sup,D_coup)
 
-def est_valide(var,coup,joueur) : ###lignes 106-167 : le coup est-il valide? on ne vérifie que les conditions pour l'IA. Les autres du joueur (coup reconnu? et case occupée?) sont vérifiées au début de coup_joueur###
+def est_valide(var,coup,joueur) : ###le coup est-il valide? on ne vérifie que les conditions pour l'IA. Les autres du joueur (coup reconnu? et case occupée?) sont vérifiées au début de coup_joueur###
     ans=True
     i=int(coup[0])
     j=int(coup[1])
@@ -163,7 +170,7 @@ def est_valide(var,coup,joueur) : ###lignes 106-167 : le coup est-il valide? on 
             error='Position déja atteinte (ko)' #si oui, non valide (règle du ko)
     return(ans,Adj_joueur,Adj_ennemi,Adj_autres,error) #on renvoie les valeurs dont on a besoin dans les coups du joueur et de l'IA
 
-def jouer_coup(var,valide,ans,joueur) : ###lignes 169-228 : le coup est joué et les variables sont modifées (effet de bord)###
+def jouer_coup(var,valide,ans,joueur) : ###le coup est joué et les variables sont modifées (effet de bord)###
     points_sup=[]
     Adj_joueur=valide[1] #comme avant
     Adj_ennemi=valide[2] #comme avant
@@ -224,7 +231,7 @@ def jouer_coup(var,valide,ans,joueur) : ###lignes 169-228 : le coup est joué et
                     var.Chaines[case_2].append(case_1) #on rajoute les cases de la chaîne 2 à la chaîne 1
     return(points_sup) #et on rend les points gagnés, seule info dont on a besoin de cette fonction
 
-def partie_alea(var,joueur) : ###lignes 230-248 : simulation d'une partie entre IAs qui jouent aléatoirement###
+def partie_alea(var,joueur) : ###simulation d'une partie entre IAs qui jouent aléatoirement###
     while var.Cases!=[] : #tant qu'il reste des cases vides
         coup_1=coup_IA_alea(var,joueur) #joueur joue
         points_sup=coup_1[1]
@@ -244,49 +251,44 @@ def partie_alea(var,joueur) : ###lignes 230-248 : simulation d'une partie entre 
     elif var.Points[1]>var.Points[0] :
         return(2) #Blanc gagne
 
-def train_v1(n_parties,n_sim) :
-    D={}
-    for k in range(n_parties) :
-        var=settings()
+def indice(P,joueur) : ###fonction pour faciliter l'écriture des indices pour les dictionnaires sauvegardés###
+    return((tuple([tuple(P[i]) for i in range(len(P))]),joueur))
+    
+def train_v1(N,n_parties,n_sim) :
+    D=marshal.load(open('train_v1_'+str(N),'rb')) #on récupère les tests qu'on a déja faits s'il y en a pour ne pas les perdre
+    for i in range(n_parties) :
+        var=settings() #on réinitialise var pour la partie suivante
         var.N=N
-        while var.Cases!=[] : ###lignes 28-62 : déroulement de la partie###
-            if humain==1 : #si le joueur humain joue Noir
-                coup_1=coup_IA_v1(var,1) #coup du joueur
-                points_sup=coup_1[1]
-                while points_sup!=[] : #on lui ajoute ses points si il en a gagné
-                    points=points_sup[0]
-                    var.Points[0]=var.Points[0]+points
-                    print('Noir gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
-                    points_sup.remove(points)
-                if len(var.Cases)>=1 : #s'il reste une case vide pour l'IA
-                    coup_2=coup_IA_v1(var,IA,n_sim) #coup de l'IA
-                    print('IA : '+str(coup_2[0]))
-                    points_sup=coup_2[1]
-                    while points_sup!=[] : #on lui ajoute ses points
-                        points=points_sup[0]
-                        var.Points[1]=var.Points[1]+points
-                        print('Blanc gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
-                        points_sup.remove(points)
-            else : #si le joueur humain joue Blanc
-                coup_1=coup_IA_v1(var,IA,n_sim) #coup de l'IA
-                print('IA : '+str(coup_1[0]))
-                points_sup=coup_1[1]
+        while var.Cases!=[] : ###déroulement de la partie###
+            coup_1=coup_IA_v1(var,1,n_sim,1) #coup de Noir
+            points_sup=coup_1[1]
+            while points_sup!=[] : #on lui ajoute ses points si il en a gagné
+                points=points_sup[0]
+                var.Points[0]=var.Points[0]+points
+                points_sup.remove(points)
+            D_coup=coup_1[2]
+            for indice in D_coup :
+                if indice in D :
+                    (n_win,n_tot)=D[indice]
+                    n_win=n_win+D_coup[indice]
+                    n_tot=n_tot+n_sim
+                    D[indice]=(n_win,n_tot)
+                else :
+                    D[indice]=(D_coup[indice],n_sim)
+            if len(var.Cases)>=1 : #s'il reste une case vide pour Blanc
+                coup_2=coup_IA_v1(var,2,n_sim,1) #coup de Blanc
+                points_sup=coup_2[1]
                 while points_sup!=[] : #on lui ajoute ses points
                     points=points_sup[0]
-                    var.Points[0]=var.Points[0]+points
-                    print('Noir gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
+                    var.Points[1]=var.Points[1]+points
                     points_sup.remove(points)
-                if len(Cases)>=1 : #s'il reste une case vide sur le joueur
-                    coup_2=coup_humain(var,humain) #coup du joueur
-                    points_sup=coup_2[1]
-                    while points_sup!=[] : #on lui ajoute ses points
-                        points=points_sup[0]
-                        var.Points[1]=var.Points[1]+points
-                        print('Blanc gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
-                        points_sup.remove(points)
-        if var.Points[0]>var.Points[1] : ###lignes 63-68 : comptage des fois et gagnant###
-            print('Noir gagne. '+str(var.Points[0])+' - '+str(var.Points[1]))
-        elif var.Points[1]>var.Points[0] :
-            print('Blanc gagne. '+str(var.Points[0])+' - '+str(var.Points[1]))
-        else :
-            print('Egalité') #en pratique ce cas n'arrive pas à cause du komi (voir Go_settings lignes 11-12) qui n'est volontairement pas entier
+                D_coup=coup_2[2]
+                for indice in D_coup :
+                    if indice in D :
+                        (n_win,n_tot)=D[indice]
+                        n_win=n_win+D_coup[indice]
+                        n_tot=n_tot+n_sim
+                        D[indice]=(n_win,n_tot)
+                    else :
+                        D[indice]=(D_coup[indice],n_sim)
+    marshal.dump(D,open('train_v1_'+str(N),'wb')) #on sauvegarde les données
