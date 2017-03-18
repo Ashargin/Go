@@ -254,7 +254,7 @@ def partie_alea(var,joueur) : ###simulation d'une partie entre IAs qui jouent al
 def indice(P,joueur) : ###fonction pour faciliter l'écriture des indices pour les dictionnaires sauvegardés###
     return((tuple([tuple(P[i]) for i in range(len(P))]),joueur))
     
-def train_v1(N,n_parties,n_sim) :
+def train_v1(N,n_parties,n_sim) : ###pour simuler des parties aléatoires et sauvegarder les résultats localement###
     D=marshal.load(open('train_v1_'+str(N),'rb')) #on récupère les tests qu'on a déja faits s'il y en a pour ne pas les perdre
     for i in range(n_parties) :
         var=settings() #on réinitialise var pour la partie suivante
