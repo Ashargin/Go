@@ -70,7 +70,36 @@ def coup_IA_alea(var,IA) : ###structure du coup de l'IA (joue aléatoirement)###
         points_sup=jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
     return(ans,points_sup)
 
-def coup_IA_v1(var,IA,n_sim,train_mode) : ###structure du coup de l'IA###
+def coup_IA_v1(var,IA) : ###structure du coup de l'IA, profondeur=1 pour l'instant###
+    D=marshal.load(open('train_v1_'+str(var.N),'rb')) #on récupère les tests qu'on a déja faits
+    meilleur_coup='' #meilleur coup retenu
+    value=-1 #"valeur" de ce coup (% de victoire estimé après ce coup)
+    points_sup=[]
+    Cases_valides=[]
+    for k in range(len(var.Cases)) :
+        coup=var.Cases[k]
+        valide=est_valide(var,coup,IA) #fonction est_valide en bas (partie 1 du coup)
+        if valide[0]==True : #si le coup est valide, on prend sa "value"
+            Cases_valides.append(coup)
+            if indice(var.P,IA) in D :
+                (n_win,n_tot)=D[indice(var.P,IA)]
+                value_coup=n_win/n_tot
+                if value_coup>value :
+                    value=value_coup
+                    meilleur_coup=coup
+    if Cases_valides!=[] and meilleur_coup=='' : #s'il n'y a pas eu de tests pour cette position
+        n=int(random()*len(Cases_valides)) #case aléatoire
+        meilleur_coup=Cases_valides[n]
+    if Cases_valides==[] : #si aucun coup n'est valide
+        ans='pas de coup possible.'
+        var.Cases=[] #la partie s'arrête
+    else : #s'il y a un coup valide
+        valide_meilleur=est_valide(var,meilleur_coup,IA)
+        ans=meilleur_coup
+        points_sup=jouer_coup(var,valide_meilleur,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
+    return(ans,points_sup)
+
+def coup_IA_v1_train(var,IA,n_sim) : ###structure du coup de l'IA###
     meilleur_coup='' #meilleur coup retenu
     value=-1 #"valeur" de ce coup (% de victoire estimé après ce coup)
     points_sup=[]
@@ -90,8 +119,7 @@ def coup_IA_v1(var,IA,n_sim,train_mode) : ###structure du coup de l'IA###
                 var_2=copy.deepcopy(var_copy)
                 if partie_alea(var_2,3-IA)==IA :
                     c=c+1
-            if train_mode==1 : #si on veut sauvegarder et exporter les tests
-                D_coup[indice(var_copy.P,3-IA)]=n_sim-c
+            D_coup[indice(var_copy.P,3-IA)]=n_sim-c #on sauvegarde les tests
             if c>value : #si le coup est meilleur que celui qu'on avait retenu :
                 meilleur_coup=coup #il devient le meilleur coup
                 value=c
@@ -102,10 +130,7 @@ def coup_IA_v1(var,IA,n_sim,train_mode) : ###structure du coup de l'IA###
         valide_meilleur=est_valide(var,meilleur_coup,IA)
         ans=meilleur_coup
         points_sup=jouer_coup(var,valide_meilleur,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
-    if train_mode==0 :
-        return(ans,points_sup)
-    else :
-        return(ans,points_sup,D_coup)
+    return(ans,points_sup,D_coup)
 
 def est_valide(var,coup,joueur) : ###le coup est-il valide? on ne vérifie que les conditions pour l'IA. Les autres du joueur (coup reconnu? et case occupée?) sont vérifiées au début de coup_joueur###
     ans=True
@@ -260,7 +285,7 @@ def train_v1(N,n_parties,n_sim) : ###pour simuler des parties aléatoires et sau
         var=settings() #on réinitialise var pour la partie suivante
         var.N=N
         while var.Cases!=[] : ###déroulement de la partie###
-            coup_1=coup_IA_v1(var,1,n_sim,1) #coup de Noir
+            coup_1=coup_IA_v1_train(var,1,n_sim) #coup de Noir
             points_sup=coup_1[1]
             while points_sup!=[] : #on lui ajoute ses points si il en a gagné
                 points=points_sup[0]
@@ -276,7 +301,7 @@ def train_v1(N,n_parties,n_sim) : ###pour simuler des parties aléatoires et sau
                 else :
                     D[indice]=(D_coup[indice],n_sim)
             if len(var.Cases)>=1 : #s'il reste une case vide pour Blanc
-                coup_2=coup_IA_v1(var,2,n_sim,1) #coup de Blanc
+                coup_2=coup_IA_v1_train(var,2,n_sim) #coup de Blanc
                 points_sup=coup_2[1]
                 while points_sup!=[] : #on lui ajoute ses points
                     points=points_sup[0]
