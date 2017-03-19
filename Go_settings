@@ -280,12 +280,16 @@ def partie_alea(var,joueur) : ###simulation d'une partie entre IAs qui jouent al
 def indice(P,joueur) : ###fonction pour faciliter l'écriture des indices pour les dictionnaires sauvegardés###
     return((tuple([tuple(P[i]) for i in range(len(P))]),joueur))
     
-def train_v1(N,n_parties,n_sim) : ###pour simuler des parties aléatoires et sauvegarder les résultats localement###
+def train_v1(N,n_parties,n_sim,coups_avant_train) : ###pour simuler des parties aléatoires et sauvegarder les résultats localement###
     D=marshal.load(open('train_v1_'+str(N),'rb')) #on récupère les tests qu'on a déja faits s'il y en a pour ne pas les perdre
     for i in range(n_parties) :
         var=settings(N) #on réinitialise var pour la partie suivante
+        c=0
         while var.Cases!=[] : ###déroulement de la partie###
-            coup_1=coup_IA_v1_train(var,1,n_sim) #coup de Noir
+            if c<coups_avant_train :
+                coup_1=coup_IA_v1(var,1) #coup de Noir
+            else :
+                coup_1=coup_IA_v1_train(var,1,n_sim) #coup de Noir
             points_sup=coup_1[1]
             while points_sup!=[] : #on lui ajoute ses points si il en a gagné
                 points=points_sup[0]
@@ -300,8 +304,12 @@ def train_v1(N,n_parties,n_sim) : ###pour simuler des parties aléatoires et sau
                     D[indice]=(n_win,n_tot)
                 else :
                     D[indice]=(D_coup[indice],n_sim)
+            c=c+1
             if len(var.Cases)>=1 : #s'il reste une case vide pour Blanc
-                coup_2=coup_IA_v1_train(var,2,n_sim) #coup de Blanc
+                if c<coups_avant_train :
+                    coup_2=coup_IA_v1(var,2) #coup de Blanc
+                else :
+                    coup_2=coup_IA_v1_train(var,2,n_sim) #coup de Blanc
                 points_sup=coup_2[1]
                 while points_sup!=[] : #on lui ajoute ses points
                     points=points_sup[0]
@@ -316,4 +324,5 @@ def train_v1(N,n_parties,n_sim) : ###pour simuler des parties aléatoires et sau
                         D[indice]=(n_win,n_tot)
                     else :
                         D[indice]=(D_coup[indice],n_sim)
+                c=c+1
     marshal.dump(D,open('train_v1_'+str(N),'wb')) #on sauvegarde les données
