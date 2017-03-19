@@ -1,0 +1,26 @@
+D=marshal.load(open('train_v1_5','rb'))
+D2={}
+for i in range(1,26) :
+    D2[i]={}
+for i in D :
+    P=i[0]
+    res=D[i]
+    n_win=res[0]
+    n_tot=res[1]
+    n=0
+    for j in range(5) :
+        for k in range(5) :
+            if P[j][k]>0 :
+                n=n+1
+    if n_tot in D2[n] :
+        D2[n][n_tot]=D2[n][n_tot]+1
+    else :
+        D2[n][n_tot]=1
+for n in D2 :
+    c=0
+    print('Pour '+str(n)+' cases occupées :')
+    for n_tot in D2[n] :
+        c=c+D2[n][n_tot]
+    for n_tot in D2[n] :
+        print(str(n_tot)+' itérations : '+str(D2[n][n_tot])+' positions ('+str(100*D2[n][n_tot]/c)+'%).')
+    print(' ')
