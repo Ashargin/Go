@@ -82,9 +82,11 @@ def coup_IA_v1(var,IA) : ###structure du coup de l'IA, profondeur=1 pour l'insta
         valide=est_valide(var,coup,IA) #fonction est_valide en bas (partie 1 du coup)
         if valide[0]==True : #si le coup est valide, on prend sa "value"
             Cases_valides.append(coup)
-            if indice(var.P,IA) in D :
-                (n_win,n_tot)=D[indice(var.P,IA)]
-                value_coup=n_win/n_tot
+            var_copy=copy.deepcopy(var)
+            jouer_coup(var_copy,valide,coup,IA)  #fonction jouer_coup en bas (partie 2 du coup)
+            if indice(var_copy.P,3-IA) in D :
+                (n_win,n_tot)=D[indice(var_copy.P,3-IA)]
+                value_coup=1-n_win/n_tot
                 if value_coup>value :
                     value=value_coup
                     meilleur_coup=coup
@@ -98,7 +100,6 @@ def coup_IA_v1(var,IA) : ###structure du coup de l'IA, profondeur=1 pour l'insta
         valide_meilleur=est_valide(var,meilleur_coup,IA)
         ans=meilleur_coup
         points_sup=jouer_coup(var,valide_meilleur,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
-    print('coup')
     return(ans,points_sup)
 
 def coup_IA_v1_train(var,IA,n_sim) : ###structure du coup de l'IA###
@@ -289,7 +290,7 @@ def train_v1(N,n_parties,n_sim,coups_avant_train) : ###pour simuler des parties 
         while var.Cases!=[] : ###déroulement de la partie###
             if c<coups_avant_train :
                 coup_1=coup_IA_v1(var,1) #coup de Noir
-                D_coup=[]
+                D_coup={}
             else :
                 coup_1=coup_IA_v1_train(var,1,n_sim) #coup de Noir
                 D_coup=coup_1[2]
@@ -310,10 +311,10 @@ def train_v1(N,n_parties,n_sim,coups_avant_train) : ###pour simuler des parties 
             if len(var.Cases)>=1 : #s'il reste une case vide pour Blanc
                 if c<coups_avant_train :
                     coup_2=coup_IA_v1(var,2) #coup de Blanc
-                    D_coup=[]
+                    D_coup={}
                 else :
                     coup_2=coup_IA_v1_train(var,2,n_sim) #coup de Blanc
-                    D_coup=coup_2[1]
+                    D_coup=coup_2[2]
                 points_sup=coup_2[1]
                 while points_sup!=[] : #on lui ajoute ses points
                     points=points_sup[0]
