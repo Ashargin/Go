@@ -1,9 +1,9 @@
-N=5 ###initialisation###
+N=3 ###initialisation###
 n_sim=50
-n_parties=100
+n_parties=10
 from Go_settings import*
-joueur1='alea' #à choisir parmi ('alea','v1','v1_train')
-joueur2='v1'
+joueur1='v1' #à choisir parmi ('alea','v1','v1_train')
+joueur2='v1_train'
 joueur=1
 c=0
 for i in range(n_parties) :
@@ -57,12 +57,12 @@ for i in range(n_parties) :
                     points=points_sup[0]
                     var.Points[1]=var.Points[1]+points
                     points_sup.remove(points)
-    if var.Points[0]>var.Points[1] : ###comptage des fois et gagnant###
+    if var.Points[0]>var.Points[1] and joueur==1 or var.Points[1]>var.Points[0] and joueur==2 : ###comptage des fois et gagnant###
         c=c+1
     joueur=3-joueur #pour alterner le joueur qui joue en premier
 print('Joueur 1 gagne '+str(c)+' parties sur '+str(n_parties)+' ('+str(100*c/n_parties)+'%).')
 
 #tests : 
 #alea vs alea : 0.003sec/partie
-#v1 vs v1 : 9.7sec/partie
+#v1 vs v1 : 9.7sec/partie / 51sec/partie (augmente beaucoup avec la taille de D?)
 #v1_train vs v1_train : 59sec/partie
