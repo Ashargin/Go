@@ -1,5 +1,6 @@
 import marshal
-N=3
+N=2
+n_sim_min=30000
 D=marshal.load(open('train_v1_'+str(N),'rb'))
 D2={}
 for i in range(1,N**2) :
@@ -18,7 +19,6 @@ for i in D :
         D2[n][n_tot]=D2[n][n_tot]+1
     else :
         D2[n][n_tot]=1
-n_sim_min=500
 for n in D2 :
     c=0
     c2=0
