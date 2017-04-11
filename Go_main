@@ -14,57 +14,40 @@ elif humain in ('Blanc','blanc','Blancs','blancs') :
     humain=2
 IA=3-humain
 print(' ')
-print('Nombre de simulations par coup pour l IA?') #on définit le nombre de simulationspar coup pour l'IA
-n_sim=int(input())
-print(' ')
 print('Handicap?') #si on veut ajouter un handicap
 handicap=int(input())
 c_handicap=0
 while var.Cases!=[] and c_handicap<handicap-1 : ###phase d'handicap###
     if humain==1 :
+        print(' ')
         coup_humain(var,humain)
     else :
-        coup=coup_IA_v1(var,IA)
-        print('IA : '+str(coup[0]))
+        coup_IA=coup_IA_v1(var,IA)
+        print(' ')
+        print('IA : '+str(coup_IA))
     c_handicap=c_handicap+1
 while var.Cases!=[] : ###déroulement de la partie###
     if humain==1 : #si le joueur humain joue Noir
-        coup_1=coup_humain(var,1) #coup du joueur
-        points_sup=coup_1[1]
-        while points_sup!=[] : #on lui ajoute ses points si il en a gagné
-            points=points_sup[0]
-            var.Points[0]=var.Points[0]+points
-            print('Noir gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
-            points_sup.remove(points)
+        print(' ')
+        coup_humain(var,1) #coup du joueur
         if len(var.Cases)>=1 : #s'il reste une case vide pour l'IA
-            coup_2=coup_IA_v1(var,2) #coup de l'IA
-            print('IA : '+str(coup_2[0]))
-            points_sup=coup_2[1]
-            while points_sup!=[] : #on lui ajoute ses points
-                points=points_sup[0]
-                var.Points[1]=var.Points[1]+points
-                print('Blanc gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
-                points_sup.remove(points)
+            coup_IA=coup_IA_v1(var,2) #coup de l'IA
+            print('IA : '+str(coup_IA))
     else : #si le joueur humain joue Blanc
-        coup_1=coup_IA_v1(var,1) #coup de l'IA
-        print('IA : '+str(coup_1[0]))
-        points_sup=coup_1[1]
-        while points_sup!=[] : #on lui ajoute ses points
-            points=points_sup[0]
-            var.Points[0]=var.Points[0]+points
-            print('Noir gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
-            points_sup.remove(points)
+        coup_IA=coup_IA_v1(var,1) #coup de l'IA
+        print(' ')
+        print('IA : '+str(coup_IA))
         if len(var.Cases)>=1 : #s'il reste une case vide sur le joueur
-            coup_2=coup_humain(var,2) #coup du joueur
-            points_sup=coup_2[1]
-            while points_sup!=[] : #on lui ajoute ses points
-                points=points_sup[0]
-                var.Points[1]=var.Points[1]+points
-                print('Blanc gagne '+str(points)+' points. '+str(var.Points[0])+' - '+str(var.Points[1]))
-                points_sup.remove(points)
-if var.Points[0]>var.Points[1] : ###comptage des fois et gagnant###
-    print('Noir gagne. '+str(var.Points[0])+' - '+str(var.Points[1]))
-elif var.Points[1]>var.Points[0] :
-    print('Blanc gagne. '+str(var.Points[0])+' - '+str(var.Points[1]))
+            coup_humain(var,2) #coup du joueur
+Area=area(var) ###comptage des fois et gagnant###
+print(' ')
+print('Area : '+str(Area[0])+' - '+str(Area[1]))
+print('Komi : '+str(var.Komi[var.N]))
+Score=[Area[0],Area[1]+var.Komi[var.N]]
+print('Score final : '+str(Score[0])+' - '+str(Score[1]))
+if Score[0]>Score[1] :
+    print('Noir gagne')
+elif Score[0]<Score[1] :
+    print('Blanc gagne')
 else :
     print('Egalité') #en pratique ce cas n'arrive pas à cause du komi qui n'est volontairement pas entier
