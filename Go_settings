@@ -8,14 +8,12 @@ class settings : ###création de la classe settings pour l'attribution des varia
         self.Pos=[copy.deepcopy(P)] #liste des positions P déja atteintes (pour la règle du ko)
         self.Chaines={} #les chaînes formées. Chaines est construite de cette manière (IMPORTANT) : c'est un dictionnaire qui à chaque case (i,j) du plateau associe [[libertés de la chaîne], case_1_de_la_chaîne, ..., dernière_case_de_la_chaîne]. Par exemple, pour une chaîne de 2 cases avec (1,1) et (1,2), Chaîne={(1, 1): [[(2, 1), (2, 2), (1, 3)], (1, 1), (1, 2)], (1, 2): [[(2, 1), (2, 2), (1, 3)], (1, 1), (1, 2)]}
         self.Cases=[(i+1,j+1) for i in range(N) for j in range(N)] #cases vides
-        komi={2: 0.5, 3: 0.5, 4: 0.5, 5: 0.5, 6: 0.5, 7: 0.5, 8: 0.5, 9: 0.5, 10: 0.5, 11: 0.5, 12: 0.5, 13: 0.5, 14: 0.5, 15: 0.5, 16: 0.5, 17: 0.5, 18: 0.5, 19: 0.5} #valeur du komi selon la taille du goban (pour l'instant 0.5 quelle que soit la taile)
-        self.Points=[0,komi[N]] #liste des points : [pts_noir,pts_blanc]
+        self.Komi={2: 1.5, 3: 8.5, 4: 2.5, 5: 24.5, 6: 4.5, 7: 9.5, 8: 7.5, 9: 7.5, 10: 7.5, 11: 7.5, 12: 7.5, 13: 7.5, 14: 7.5, 15: 7.5, 16: 7.5, 17: 7.5, 18: 7.5, 19: 7.5} #valeur du komi selon la taille du goban en area scoring
 
 from random import* #importation
 
 def coup_humain(var,humain) : ###structure du coup du joueur humain###
     test=1
-    points_sup=[]
     for case in var.Cases :
         if est_valide(var,case,humain)[0]==True :
             test=0
@@ -24,7 +22,6 @@ def coup_humain(var,humain) : ###structure du coup du joueur humain###
         print('Pas de coup possible.')
         var.Cases=[]
     else :
-        print(' ')
         print('Coup?') #on demande le coup voulu
         error_check=1
         while error_check!=0 : #on vérifie si le coup est possible
@@ -49,15 +46,14 @@ def coup_humain(var,humain) : ###structure du coup du joueur humain###
             var.Cases=[] #la partie s'arrête
         else : #le coup est valide et le joueur n'a pas passé
             ans=(i,j)
-            points_sup=jouer_coup(var,valide,ans,humain) #fonction jouer_coup en bas (partie 2 du coup)
-    return(ans,points_sup)
+            jouer_coup(var,valide,ans,humain) #fonction jouer_coup en bas (partie 2 du coup)
+    return(ans)
 
 def coup_IA_alea(var,IA) : ###structure du coup de l'IA (joue aléatoirement)###
     Cases_copy=[k for k in var.Cases] #copie pour tester les cases valides sans modifer var.Cases
     n=int(random()*len(Cases_copy)) #case aléatoire
     coup=Cases_copy[n]
     valide=est_valide(var,coup,IA) #fonction est_valide en bas (partie 1 du coup)
-    points_sup=[]
     while valide[0]==False and len(Cases_copy)>=2 : #si la case n'est pas valide et s'il en reste, on en reprend une autre
         Cases_copy.remove(coup) #on enlève le coup non valide pour ne pas le reprendre
         n=int(random()*len(Cases_copy)) #et on en reprend un
@@ -68,14 +64,13 @@ def coup_IA_alea(var,IA) : ###structure du coup de l'IA (joue aléatoirement)###
         var.Cases=[] #la partie s'arrête
     else : #si le coup est valide
         ans=coup
-        points_sup=jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
-    return(ans,points_sup)
+        jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
+    return(ans)
 
 def coup_IA_v1(var,IA) : ###structure du coup de l'IA, profondeur=1 pour l'instant###
     D=marshal.load(open('train_v1_'+str(var.N),'rb')) #on récupère les tests qu'on a déja faits
     meilleur_coup='' #meilleur coup retenu
     value=-1 #"valeur" de ce coup (% de victoire estimé après ce coup)
-    points_sup=[]
     Cases_valides=[]
     for k in range(len(var.Cases)) :
         coup=var.Cases[k]
@@ -99,13 +94,12 @@ def coup_IA_v1(var,IA) : ###structure du coup de l'IA, profondeur=1 pour l'insta
     else : #s'il y a un coup valide
         valide_meilleur=est_valide(var,meilleur_coup,IA)
         ans=meilleur_coup
-        points_sup=jouer_coup(var,valide_meilleur,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
-    return(ans,points_sup)
+        jouer_coup(var,valide_meilleur,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
+    return(ans)
 
 def coup_IA_v1_train(var,IA,n_sim) : ###structure du coup de l'IA###
     meilleur_coup='' #meilleur coup retenu
     value=-1 #"valeur" de ce coup (% de victoire estimé après ce coup)
-    points_sup=[]
     D_coup={}
     for k in range(len(var.Cases)) :
         coup=var.Cases[k]
@@ -113,11 +107,7 @@ def coup_IA_v1_train(var,IA,n_sim) : ###structure du coup de l'IA###
         if valide[0]==True : #si le coup est valide, on cherche sa "value"
             c=0
             var_copy=copy.deepcopy(var)
-            points_sup=jouer_coup(var_copy,valide,coup,IA)  #fonction jouer_coup en bas (partie 2 du coup)
-            while points_sup!=[] : #on lui ajoute ses points si il en a gagné
-                points=points_sup[0]
-                var_copy.Points[IA-1]=var_copy.Points[IA-1]+points
-                points_sup.remove(points)
+            jouer_coup(var_copy,valide,coup,IA)  #fonction jouer_coup en bas (partie 2 du coup)
             for l in range(n_sim) :
                 var_2=copy.deepcopy(var_copy)
                 if partie_alea(var_2,3-IA)==IA :
@@ -132,8 +122,8 @@ def coup_IA_v1_train(var,IA,n_sim) : ###structure du coup de l'IA###
     else : #s'il y a un coup valide
         valide_meilleur=est_valide(var,meilleur_coup,IA)
         ans=meilleur_coup
-        points_sup=jouer_coup(var,valide_meilleur,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
-    return(ans,points_sup,D_coup)
+        jouer_coup(var,valide_meilleur,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
+    return(ans,D_coup)
 
 def est_valide(var,coup,joueur) : ###le coup est-il valide? on ne vérifie que les conditions pour l'IA. Les autres du joueur (coup reconnu? et case occupée?) sont vérifiées au début de coup_joueur###
     ans=True
@@ -141,7 +131,7 @@ def est_valide(var,coup,joueur) : ###le coup est-il valide? on ne vérifie que l
     j=int(coup[1])
     Adj_joueur=[] #cases adjacentes qui appartiennent au joueur qui joue
     Adj_ennemi=[] #cases adjacentes qui appartiennent au joueur opposé
-    Adj_autres=[] #cases adjacentes vides
+    Adj_vides=[] #cases adjacentes vides
     error=''
     if i!=1 : #on construit ces 3 listes
         if var.P[i-2][j-1]==joueur :
@@ -149,33 +139,33 @@ def est_valide(var,coup,joueur) : ###le coup est-il valide? on ne vérifie que l
         elif var.P[i-2][j-1]==3-joueur :
             Adj_ennemi.append((i-1,j))
         else :
-            Adj_autres.append((i-1,j))
+            Adj_vides.append((i-1,j))
     if i!=var.N : #de même
         if var.P[i][j-1]==joueur :
             Adj_joueur.append((i+1,j))
         elif var.P[i][j-1]==3-joueur :
             Adj_ennemi.append((i+1,j))
         else :
-            Adj_autres.append((i+1,j))
+            Adj_vides.append((i+1,j))
     if j!=1 : #de même
         if var.P[i-1][j-2]==joueur :
             Adj_joueur.append((i,j-1))
         elif var.P[i-1][j-2]==3-joueur :
             Adj_ennemi.append((i,j-1))
         else :
-            Adj_autres.append((i,j-1))
+            Adj_vides.append((i,j-1))
     if j!=var.N : #de même
         if var.P[i-1][j]==joueur :
             Adj_joueur.append((i,j+1))
         elif var.P[i-1][j]==3-joueur :
             Adj_ennemi.append((i,j+1))
         else :
-            Adj_autres.append((i,j+1))
+            Adj_vides.append((i,j+1))
     test=1
     for case in Adj_ennemi :
         if len(var.Chaines[case][0])==1 :
             test=0 #test=0 si ce coup capture au moins une chaîne, dans ce cas pas de suicide
-    if test==1 and len(Adj_autres)==0 : #sinon :
+    if test==1 and len(Adj_vides)==0 : #sinon :
         for case in Adj_joueur :
             if len(var.Chaines[case][0])>1 :
                 test=0 #test=0 si la case est liée à une chaîne alliée d'au moins 2 libertés
@@ -195,26 +185,26 @@ def est_valide(var,coup,joueur) : ###le coup est-il valide? on ne vérifie que l
                     P_save[i3-1][j3-1]=0
         if P_save in var.Pos : #la position a-t-elle déja été atteinte?
             ans=False
-            error='Position déja atteinte (ko)' #si oui, non valide (règle du ko)
-    return(ans,Adj_joueur,Adj_ennemi,Adj_autres,error) #on renvoie les valeurs dont on a besoin dans les coups du joueur et de l'IA
+            if var.Pos[len(var.Pos)-2]==P_save :
+                error='Position déja atteinte (ko)' #si oui, non valide (règle du ko)
+            else :
+                error='Position déja atteinte (superko)' #(ou du superko)
+    return(ans,Adj_joueur,Adj_ennemi,Adj_vides,error) #on renvoie les valeurs dont on a besoin dans les coups du joueur et de l'IA
 
 def jouer_coup(var,valide,ans,joueur) : ###le coup est joué et les variables sont modifées (effet de bord)###
-    points_sup=[]
     Adj_joueur=valide[1] #comme avant
     Adj_ennemi=valide[2] #comme avant
-    Adj_autres=valide[3] #comme avant
+    Adj_vides=valide[3] #comme avant
     var.Cases.remove(ans) #ans n'est plus vide
     var.P[ans[0]-1][ans[1]-1]=joueur #P change
-    var.Chaines[ans]=[[k for k in Adj_autres],ans]
+    var.Chaines[ans]=[[k for k in Adj_vides],ans]
     save=[k for k in Adj_ennemi]
     for case in save :
         if len(var.Chaines[case][0])==1 and case in Adj_ennemi : #si la chaîne est capturée :
             for case_2 in save :
                 if case_2 in var.Chaines[case][1:] :
                     Adj_ennemi.remove(case_2) #on adapte les listes
-                    Adj_autres.append(case_2)
-            longueur=len(var.Chaines[case][1:])
-            points_sup.append(longueur) #on attribue les points
+                    Adj_vides.append(case_2)
             save_2=[k for k in var.Chaines[case][1:]]
             for case_chaine in save_2 : #et on adapte Chaines (des cases deviennent libre donc il y a de nouvelles libertés)
                 var.Chaines[case_chaine]=[[]]
@@ -257,27 +247,18 @@ def jouer_coup(var,valide,ans,joueur) : ###le coup est joué et les variables so
                 for case_2 in save_2 :
                     var.Chaines[case_1].append(case_2) #on rajoute les cases de la chaîne 1 à la chaîne 2
                     var.Chaines[case_2].append(case_1) #on rajoute les cases de la chaîne 2 à la chaîne 1
-    return(points_sup) #et on rend les points gagnés, seule info dont on a besoin de cette fonction
 
 def partie_alea(var,joueur) : ###simulation d'une partie entre IAs qui jouent aléatoirement###
     while var.Cases!=[] : #tant qu'il reste des cases vides
-        coup_1=coup_IA_alea(var,joueur) #joueur joue
-        points_sup=coup_1[1]
-        while points_sup!=[] : #on lui rajoute ses points s'il en a gagné
-            points=points_sup[0]
-            var.Points[joueur-1]=var.Points[joueur-1]+points
-            points_sup.remove(points)
+        coup_IA_alea(var,joueur) #joueur joue
         if len(var.Cases)>=1 : #s'il reste une case vide
-            coup_2=coup_IA_alea(var,3-joueur) #l'autre joueur joue
-            points_sup=coup_2[1]
-            while points_sup!=[] : #on lui rajoute ses points
-                points=points_sup[0]
-                var.Points[2-joueur]=var.Points[2-joueur]+points #comprendre 2-joueur = (3-joueur)-1 où 3-joueur est l'autre joueur
-                points_sup.remove(points)
-    if var.Points[0]>var.Points[1] :
-        return(1) #Noir gagne
-    elif var.Points[1]>var.Points[0] :
-        return(2) #Blanc gagne
+            coup_IA_alea(var,3-joueur) #l'autre joueur joue
+    Area=area(var)
+    Score=[Area[0],Area[1]+var.Komi[var.N]]
+    if Score[0]>Score[1] :
+        return(1)
+    elif Score[0]<Score[1] :
+        return(2)
 
 def indice(P,joueur) : ###fonction pour faciliter l'écriture des indices pour les dictionnaires sauvegardés###
     return((tuple([tuple(P[i]) for i in range(len(P))]),joueur))
@@ -289,16 +270,11 @@ def train_v1(N,n_parties,n_sim,coups_avant_train) : ###pour simuler des parties 
         c=0
         while var.Cases!=[] : ###déroulement de la partie###
             if c<coups_avant_train :
-                coup_1=coup_IA_v1(var,1) #coup de Noir
+                coup_IA_v1(var,1) #coup de Noir
                 D_coup={}
             else :
                 coup_1=coup_IA_v1_train(var,1,n_sim) #coup de Noir
-                D_coup=coup_1[2]
-            points_sup=coup_1[1]
-            while points_sup!=[] : #on lui ajoute ses points si il en a gagné
-                points=points_sup[0]
-                var.Points[0]=var.Points[0]+points
-                points_sup.remove(points)
+                D_coup=coup_1[1]
             for indice in D_coup :
                 if indice in D :
                     (n_win,n_tot)=D[indice]
@@ -310,16 +286,11 @@ def train_v1(N,n_parties,n_sim,coups_avant_train) : ###pour simuler des parties 
             c=c+1
             if len(var.Cases)>=1 : #s'il reste une case vide pour Blanc
                 if c<coups_avant_train :
-                    coup_2=coup_IA_v1(var,2) #coup de Blanc
+                    coup_IA_v1(var,2) #coup de Blanc
                     D_coup={}
                 else :
                     coup_2=coup_IA_v1_train(var,2,n_sim) #coup de Blanc
-                    D_coup=coup_2[2]
-                points_sup=coup_2[1]
-                while points_sup!=[] : #on lui ajoute ses points
-                    points=points_sup[0]
-                    var.Points[1]=var.Points[1]+points
-                    points_sup.remove(points)
+                    D_coup=coup_2[1]
                 for indice in D_coup :
                     if indice in D :
                         (n_win,n_tot)=D[indice]
@@ -330,3 +301,78 @@ def train_v1(N,n_parties,n_sim,coups_avant_train) : ###pour simuler des parties 
                         D[indice]=(D_coup[indice],n_sim)
                 c=c+1
     marshal.dump(D,open('train_v1_'+str(N),'wb')) #on sauvegarde les données
+
+def area(var) : ###fonction pour compter les points (en area scoring)###
+    area_noir=0
+    area_blanc=0
+    territory=[] #on construit la liste des chaînes de cases vides de la gauche vers la droite et du haut vers le bas
+    for i in range(1,var.N+1) :
+        for j in range(1,var.N+1) :
+            val=var.P[i-1][j-1]
+            if val==1 : #c'est une case noire
+                area_noir=area_noir+1
+            elif val==2 : #c'est une case blanche
+                area_blanc=area_blanc+1
+            else : #c'est une case vide
+                c_haut=0 #indicateurs
+                c_gauche=0
+                if i!=1 :
+                    if var.P[i-2][j-1]==0 :
+                        c_haut=1 #si la case de gauche est vide
+                if j!=1 :
+                    if var.P[i-1][j-2]==0 :
+                        c_gauche=1 #si la case du haut est vide
+                if c_haut==0 and c_gauche==0 :
+                    territory.append([(i,j)]) #création d'une nouvelle chaîne
+                elif c_haut==1 and c_gauche==0 :
+                    territory[indice_chaine(territory,(i-1,j))].append((i,j)) #on lie la case à la chaîne du haut
+                elif c_haut==0 and c_gauche==1 :
+                    territory[indice_chaine(territory,(i,j-1))].append((i,j)) #on lie la case à la chaîne de gauche
+                else : #les cases du haut et de gauche sont vides
+                    k1=indice_chaine(territory,(i-1,j))
+                    k2=indice_chaine(territory,(i,j-1))
+                    if k1==k2 :#les cases du haut et de gauche sont dans le même chaîne
+                        territory[k1].append((i,j))
+                    else :
+                        for case in territory[k2] :
+                            territory[k1].append(case)
+                        territory.remove(territory[k2])
+                        territory[k1].append((i,j))
+    for chaine in territory :
+        Cases_adj=[]
+        for case in chaine :
+            i=case[0]
+            j=case[1]
+            if i!=1 :
+                if var.P[i-2][j-1]!=0 :
+                    Cases_adj.append(var.P[i-2][j-1])
+            if i!=var.N :
+                if var.P[i][j-1]!=0 :
+                    Cases_adj.append(var.P[i][j-1])
+            if j!=1 :
+                if var.P[i-1][j-2]!=0 :
+                    Cases_adj.append(var.P[i-1][j-2])
+            if j!=var.N :
+                if var.P[i-1][j]!=0 :
+                    Cases_adj.append(var.P[i-1][j])
+        joueur=Cases_adj[0]
+        test=joueur
+        k=1
+        while test==joueur and k<len(Cases_adj) :
+            if Cases_adj[k]!=joueur :
+                test=0
+            k=k+1
+        if test==1 :
+            area_noir=area_noir+len(chaine)
+        elif test==2 :
+            area_blanc=area_blanc+len(chaine)
+    return(area_noir,area_blanc)
+
+def indice_chaine(territory,case) : ###fonction pour trouver de quelle chaîne de cases vides fait partie la case###
+    ans=-1
+    k=0
+    while ans==-1 :
+        if case in territory[k] :
+            ans=k
+        k=k+1
+    return(ans)
