@@ -39,7 +39,7 @@ while var.Cases!=[] : ###déroulement de la partie###
         print('IA : '+str(coup_IA))
         if len(var.Cases)>=1 : #s'il reste une case vide sur le joueur
             coup_humain(var,2) #coup du joueur
-Area=area(var) ###comptage des fois et gagnant###
+Area=area(var.P) ###comptage des fois et gagnant###
 print(' ')
 print('Area : '+str(Area[0])+' - '+str(Area[1]))
 print('Komi : '+str(var.Komi[var.N]))
