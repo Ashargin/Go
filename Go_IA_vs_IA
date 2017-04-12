@@ -1,9 +1,9 @@
-N=2 ###initialisation###
+N=3 ###initialisation###
 n_sim=50
-n_parties=1000
+n_parties=5
 from Go_settings import*
-joueur1='v1' #à choisir parmi ('alea','v1','v1_train')
-joueur2='alea'
+joueur1='v1' #à choisir parmi ('alea','v1','v1_comp','v1_train')
+joueur2='v1'
 joueur=1
 c=0
 for i in range(n_parties) :
@@ -14,6 +14,8 @@ for i in range(n_parties) :
                 coup_IA_alea(var,1) #coup du joueur 1 (alea)
             elif joueur1=='v1' :
                 coup_IA_v1(var,1) #coup du joueur 1 (v1)
+            elif joueur1=='v1_comp' :
+                coup_IA_v1_comp(var,1) #coup du joueur 1 (v1_comp)
             else :
                 coup_IA_v1_train(var,1,n_sim) #coup du joueur 1 (v1_train)
             if len(var.Cases)>=1 : #s'il reste une case vide pour le joueur 2
@@ -21,6 +23,8 @@ for i in range(n_parties) :
                     coup_IA_alea(var,2) #coup du joueur 2 (alea)
                 elif joueur2=='v1' :
                     coup_IA_v1(var,2) #coup du joueur 2 (v1)
+                elif joueur2=='v1_comp' :
+                    coup_IA_v1_comp(var,2) #coup du joueur 2 (v1_comp)
                 else :
                     coup_IA_v1_train(var,2,n_sim) #coup du joueur 2 (v1_train)
         else : #joueur 2 commence
@@ -28,6 +32,8 @@ for i in range(n_parties) :
                 coup_IA_alea(var,1) #coup du joueur 2 (alea)
             elif joueur2=='v1' :
                 coup_IA_v1(var,1) #coup du joueur 2 (v1)
+            elif joueur2=='v1_comp' :
+                coup_IA_v1_comp(var,1) #coup du joueur 2 (v1_comp)
             else :
                 coup_IA_v1_train(var,1,n_sim) #coup du joueur 2 (v1_train)
             if len(var.Cases)>=1 : #s'il reste une case vide sur le joueur
@@ -35,16 +41,13 @@ for i in range(n_parties) :
                     coup_IA_alea(var,2) #coup du joueur 1 (alea)
                 elif joueur1=='v1' :
                     coup_IA_v1(var,2) #coup du joueur 1 (v1)
+                elif joueur1=='v1_comp' :
+                    coup_IA_v1_comp(var,2) #coup du joueur 1 (v1_comp)
                 else :
                     coup_IA_v1_train(var,2,n_sim) #coup du joueur 1 (v1_train)
-    Area=area(var) ###comptage des fois et gagnant###
+    Area=area(var.P) ###comptage des fois et gagnant###
     Score=[Area[0],Area[1]+var.Komi[var.N]]
     if Score[0]>Score[1] and joueur==1 or Score[1]>Score[0] and joueur==2 :
         c=c+1
     joueur=3-joueur #pour alterner le joueur qui joue en premier
 print('Joueur 1 gagne '+str(c)+' parties sur '+str(n_parties)+' ('+str(100*c/n_parties)+'%).')
-
-#tests : 
-#alea vs alea : 0.003sec/partie
-#v1 vs v1 : 9.7sec/partie / 51sec/partie (augmente beaucoup avec la taille de D?)
-#v1_train vs v1_train : 59sec/partie
