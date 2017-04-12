@@ -1,5 +1,5 @@
 import marshal
-N=2
+N=3
 n_sim_min=30000
 D=marshal.load(open('train_v1_'+str(N),'rb'))
 D2={}
