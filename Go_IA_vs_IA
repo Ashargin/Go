@@ -1,6 +1,6 @@
 N=3 ###initialisation###
 n_sim=50
-n_parties=5
+n_parties=1
 from Go_settings import*
 joueur1='v1' #à choisir parmi ('alea','v1','v1_comp','v1_train')
 joueur2='v1'
@@ -51,3 +51,8 @@ for i in range(n_parties) :
         c=c+1
     joueur=3-joueur #pour alterner le joueur qui joue en premier
 print('Joueur 1 gagne '+str(c)+' parties sur '+str(n_parties)+' ('+str(100*c/n_parties)+'%).')
+
+#tests : en x3 :
+#alea vs alea : 0.003sec/partie
+#v1 vs v1 : 250sec/partie / 51sec/partie (augmente beaucoup avec la taille de D?)
+#v1_train vs v1_train : 59sec/partie
