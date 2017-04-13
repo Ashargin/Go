@@ -1,5 +1,9 @@
+##Importations
 import copy #pour les deepcopies
 import marshal #pour les sauvegardes locales
+from random import* #importation
+
+##Class settings(N)
 class settings : ###création de la classe settings pour l'attribution des variables utiles pour l'IA. Les autres variables qui ne servent qu'au joueur, le côté du joueur et le handicap, sont saisies au début de Go_main.py###
     def __init__(self,N) :
         self.N=N #taille du goban
@@ -10,8 +14,7 @@ class settings : ###création de la classe settings pour l'attribution des varia
         self.Cases=[(i+1,j+1) for i in range(N) for j in range(N)] #cases vides
         self.Komi={2: 1.5, 3: 8.5, 4: 2.5, 5: 24.5, 6: 4.5, 7: 9.5, 8: 7.5, 9: 7.5, 10: 7.5, 11: 7.5, 12: 7.5, 13: 7.5, 14: 7.5, 15: 7.5, 16: 7.5, 17: 7.5, 18: 7.5, 19: 7.5} #valeur du komi selon la taille du goban en area scoring
 
-from random import* #importation
-
+##Structures des coups
 def coup_humain(var,humain) : ###structure du coup du joueur humain###
     test=1
     for case in var.Cases :
@@ -67,8 +70,7 @@ def coup_IA_alea(var,IA) : ###structure du coup de l'IA (joue aléatoirement)###
         jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
     return(ans)
 
-def coup_IA_v1(var,IA) : ###structure du coup de l'IA selon v1, profondeur=1 pour l'instant###
-    D=marshal.load(open('train_v1_'+str(var.N),'rb')) #on récupère les tests qu'on a déja faits
+def coup_IA_v1(var,D,IA) : ###structure du coup de l'IA selon v1, profondeur=1 pour l'instant###
     meilleur_coup='' #meilleur coup retenu
     value=-1 #"valeur" de ce coup (% de victoire estimé après ce coup)
     Cases_valides=[]
@@ -97,17 +99,16 @@ def coup_IA_v1(var,IA) : ###structure du coup de l'IA selon v1, profondeur=1 pou
         jouer_coup(var,valide_meilleur,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
     return(ans)
 
-def coup_IA_v1_comp(var,IA) : ###structure du coup de l'IA selon v1 (avec le dict compressé)###
-    D_comp=marshal.load(open('train_v1_'+str(var.N)+'_comp','rb')) #on récupère les tests qu'on a déja faits
+def coup_IA_v1_comp(var,D,D_comp,IA) : ###structure du coup de l'IA selon v1 (avec le dict compressé)###
     ans=D_comp[indice(var.P,IA)]
     if ans=='pas de simulations' :
-        ans=coup_IA_v1(P,IA)
+        ans=coup_IA_v1(P,D,IA)
     elif ans=='pas de coup possible.' :
         var.Cases=[] #la partie s'arrête
     else : #ans est un coup
         valide=est_valide(var,ans,IA) #fonction est_valide en bas (partie 1 du coup)
         if valide[0]==False : #il faut revérifier la validié du coup (D_comp ne vérifie pas la règle du ko/superko car il n'a pas les positions précédentes)
-            ans=coup_IA_v1(var,IA)
+            ans=coup_IA_v1(var,D,IA)
         else : #le coup donné par D_comp est valide
             jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
     return(ans)
@@ -140,6 +141,7 @@ def coup_IA_v1_train(var,IA,n_sim) : ###structure du coup de l'IA pour l'entraî
         jouer_coup(var,valide_meilleur,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
     return(ans,D_coup)
 
+##Exécution des coups
 def est_valide(var,coup,joueur) : ###le coup est-il valide? on ne vérifie que les conditions pour l'IA. Les autres du joueur (coup reconnu? et case occupée?) sont vérifiées au début de coup_joueur###
     ans=True
     i=int(coup[0])
@@ -263,6 +265,49 @@ def jouer_coup(var,valide,ans,joueur) : ###le coup est joué et les variables so
                     var.Chaines[case_1].append(case_2) #on rajoute les cases de la chaîne 1 à la chaîne 2
                     var.Chaines[case_2].append(case_1) #on rajoute les cases de la chaîne 2 à la chaîne 1
 
+##Fin de la partie
+def area(P) : ###fonction pour compter les points (en area scoring)###
+    N=len(P)
+    area_noir=0
+    area_blanc=0
+    for i in range(1,N+1) :
+        for j in range(1,N+1) :
+            if P[i-1][j-1]==1 :
+                area_noir=area_noir+1
+            elif P[i-1][j-1]==2 :
+                area_blanc=area_blanc+1
+    territory=liste_chaines(P,0) #chaines de cases vides
+    for chaine in territory :
+        Cases_adj=[] #on construit la liste des cases adjacentes aux cases de la chaîne
+        for case in chaine :
+            i=case[0]
+            j=case[1]
+            if i!=1 :
+                if P[i-2][j-1]!=0 :
+                    Cases_adj.append(P[i-2][j-1])
+            if i!=N :
+                if P[i][j-1]!=0 :
+                    Cases_adj.append(P[i][j-1])
+            if j!=1 :
+                if P[i-1][j-2]!=0 :
+                    Cases_adj.append(P[i-1][j-2])
+            if j!=N :
+                if P[i-1][j]!=0 :
+                    Cases_adj.append(P[i-1][j])
+        joueur=Cases_adj[0]
+        test=joueur
+        k=1
+        while test==joueur and k<len(Cases_adj) : #et on regarde si la chaîne est un territoire
+            if Cases_adj[k]!=joueur :
+                test=0
+            k=k+1
+        if test==1 : #territoire noir
+            area_noir=area_noir+len(chaine)
+        elif test==2 : #territoire blanc
+            area_blanc=area_blanc+len(chaine)
+    return(area_noir,area_blanc)
+
+##Entraînement en v1
 def partie_alea(var,joueur) : ###simulation d'une partie entre IAs qui jouent aléatoirement###
     while var.Cases!=[] : #tant qu'il reste des cases vides
         coup_IA_alea(var,joueur) #joueur joue
@@ -285,7 +330,7 @@ def train_v1(N,n_parties,n_sim,coups_avant_train) : ###pour simuler des parties 
         c=0
         while var.Cases!=[] : ###déroulement de la partie###
             if c<coups_avant_train :
-                coup_IA_v1(var,1) #coup de Noir
+                coup_IA_v1(var,D,1) #coup de Noir
                 D_coup={}
             else :
                 coup_1=coup_IA_v1_train(var,1,n_sim) #coup de Noir
@@ -301,7 +346,7 @@ def train_v1(N,n_parties,n_sim,coups_avant_train) : ###pour simuler des parties 
             c=c+1
             if len(var.Cases)>=1 : #s'il reste une case vide pour Blanc
                 if c<coups_avant_train :
-                    coup_IA_v1(var,2) #coup de Blanc
+                    coup_IA_v1(var,D,2) #coup de Blanc
                     D_coup={}
                 else :
                     coup_2=coup_IA_v1_train(var,2,n_sim) #coup de Blanc
@@ -317,6 +362,7 @@ def train_v1(N,n_parties,n_sim,coups_avant_train) : ###pour simuler des parties 
                 c=c+1
     marshal.dump(D,open('train_v1_'+str(N),'wb')) #on sauvegarde les données
 
+##Compression des dictionnaires locaux
 def liste_chaines(P,joueur) : ###fonction pour construire la liste des chaines de cases du joueur en argument dans P (joueur=0 pour les cases vides)###
     chaines=[] #on construit la liste des chaînes de cases vides de la gauche vers la droite et du haut vers le bas
     N=len(P)
@@ -382,47 +428,6 @@ def dict_chaines(P) : ###fonction pour construire l'attribut Chaines de settings
         for case in chaine : #et on construit le dictionnaire
             Chaines[case]=[copy.copy(libertés)]+chaine
     return(Chaines)
-
-def area(P) : ###fonction pour compter les points (en area scoring)###
-    N=len(P)
-    area_noir=0
-    area_blanc=0
-    for i in range(1,N+1) :
-        for j in range(1,N+1) :
-            if P[i-1][j-1]==1 :
-                area_noir=area_noir+1
-            elif P[i-1][j-1]==2 :
-                area_blanc=area_blanc+1
-    territory=liste_chaines(P,0) #chaines de cases vides
-    for chaine in territory :
-        Cases_adj=[] #on construit la liste des cases adjacentes aux cases de la chaîne
-        for case in chaine :
-            i=case[0]
-            j=case[1]
-            if i!=1 :
-                if P[i-2][j-1]!=0 :
-                    Cases_adj.append(P[i-2][j-1])
-            if i!=N :
-                if P[i][j-1]!=0 :
-                    Cases_adj.append(P[i][j-1])
-            if j!=1 :
-                if P[i-1][j-2]!=0 :
-                    Cases_adj.append(P[i-1][j-2])
-            if j!=N :
-                if P[i-1][j]!=0 :
-                    Cases_adj.append(P[i-1][j])
-        joueur=Cases_adj[0]
-        test=joueur
-        k=1
-        while test==joueur and k<len(Cases_adj) : #et on regarde si la chaîne est un territoire
-            if Cases_adj[k]!=joueur :
-                test=0
-            k=k+1
-        if test==1 : #territoire noir
-            area_noir=area_noir+len(chaine)
-        elif test==2 : #territoire blanc
-            area_blanc=area_blanc+len(chaine)
-    return(area_noir,area_blanc)
 
 def compress(N) : ###fonction pour "compresser" le dictionnaire local : on associe à chaque position le meilleur coup possible pour ne pas le faire pendant le coup de l'IA###
     D=marshal.load(open('train_v1_'+str(N),'rb')) #on récupère les tests qu'on a déja faits
