@@ -1,55 +1,72 @@
-N=3 ###initialisation###
+N=2 ###initialisation###
+n_parties=1000
+joueur1='v2' #à choisir parmi ('alea','v1','v1_comp','v1_train','v2','v2_comp','v2_train')
+joueur2='alea'
 n_sim=50
-n_parties=1
+n_sim_min=5000
+alea=0
 from Go_settings import*
-joueur1='v1_comp' #à choisir parmi ('alea','v1','v1_comp','v1_train')
-joueur2='v1_comp'
 joueur=1
 c=0
-if joueur1=='v1_comp' or joueur2=='v1_comp' :
-    D=marshal.load(open('train_v1_'+str(N),'rb')) #on récupère les tests qu'on a déja faits
-    D_comp=marshal.load(open('train_v1_'+str(N)+'_comp','rb'))
-elif joueur1=='v1' or joueur2=='v1' :
-    D=marshal.load(open('train_v1_'+str(N),'rb')) #on récupère les tests qu'on a déja faits
+if joueur1 in ('v1','v1_comp','v1_train') :
+    version1='v1'
+elif joueur1 in ('v2','v2_comp','v2_train') :
+    version1='v2'
+if joueur2 in ('v1','v1_comp','v1_train') :
+    version2='v1'
+elif joueur2 in ('v2','v2_comp','v2_train') :
+    version2='v2'
+D1=marshal.load(open('train_'+version1+'_'+str(N),'rb'))
+D_comp1=marshal.load(open('train_'+version1+'_'+str(N)+'_comp','rb'))
+if joueur1=='v1_train' :
+    D_prev1={}
+elif joueur1=='v2_train' :
+    D_prev1=marshal.load(open('train_v1_'+str(N),'rb'))
+D2=marshal.load(open('train_'+version2+'_'+str(N),'rb'))
+D_comp2=marshal.load(open('train_'+version2+'_'+str(N)+'_comp','rb'))
+if joueur2=='v1_train' :
+    D_prev2={}
+elif joueur2=='v2_train' :
+    D_prev2=marshal.load(open('train_v1_'+str(N),'rb'))
 for i in range(n_parties) :
     var=settings(N)
     while var.Cases!=[] : ###déroulement de la partie###
         if joueur==1 : #joueur 1 commence
             if joueur1=='alea' :
                 coup_IA_alea(var,1) #coup du joueur 1 (alea)
-            elif joueur1=='v1' :
-                coup_IA_v1(var,D,1) #coup du joueur 1 (v1)
-            elif joueur1=='v1_comp' :
-                coup_IA_v1_comp(var,D,D_comp,1) #coup du joueur 1 (v1_comp)
-            else :
-                coup_IA_v1_train(var,1,n_sim) #coup du joueur 1 (v1_train)
+            elif joueur1 in ('v1','v2') :
+                coup_IA(var,1,D1) #coup du joueur 1 (IA)
+            elif joueur1 in ('v1_comp','v2_comp') :
+                coup_IA_comp(var,1,D1,D_comp1) #coup du joueur 1 (comp)
+            elif joueur1=='train' :
+                coup_IA_train(version1,var,1,n_sim,n_sim_min,D1,D_prev1,alea) #coup du joueur 1 (train)
             if len(var.Cases)>=1 : #s'il reste une case vide pour le joueur 2
                 if joueur2=='alea' :
                     coup_IA_alea(var,2) #coup du joueur 2 (alea)
-                elif joueur2=='v1' :
-                    coup_IA_v1(var,D,2) #coup du joueur 2 (v1)
-                elif joueur2=='v1_comp' :
-                    coup_IA_v1_comp(var,D,D_comp,2) #coup du joueur 2 (v1_comp)
-                else :
-                    coup_IA_v1_train(var,2,n_sim) #coup du joueur 2 (v1_train)
+                elif joueur2 in ('v1','v2') :
+                    coup_IA(var,2,D2) #coup du joueur 2 (IA)
+                elif joueur2 in ('v1_comp','v2_comp') :
+                    coup_IA_comp(var,2,D2,D_comp2) #coup du joueur 2 (comp)
+                elif joueur2=='train' :
+                    coup_IA_train(version2,var,2,n_sim,n_sim_min,D2,D_prev2,alea) #coup du joueur 2 (train)
         else : #joueur 2 commence
             if joueur2=='alea' :
                 coup_IA_alea(var,1) #coup du joueur 2 (alea)
-            elif joueur2=='v1' :
-                coup_IA_v1(var,D,1) #coup du joueur 2 (v1)
-            elif joueur2=='v1_comp' :
-                coup_IA_v1_comp(var,D,D_comp,1) #coup du joueur 2 (v1_comp)
-            else :
-                coup_IA_v1_train(var,1,n_sim) #coup du joueur 2 (v1_train)
+            elif joueur2 in ('v1','v2') :
+                coup_IA(var,1,D2) #coup du joueur 2 (IA)
+            elif joueur2 in ('v1_comp','v2_comp') :
+                coup_IA_comp(var,1,D2,D_comp2) #coup du joueur 2 (comp)
+            elif joueur2=='train' :
+                coup_IA_train(version2,var,1,n_sim,n_sim_min,D2,D_prev2,alea) #coup du joueur 2 (train)
             if len(var.Cases)>=1 : #s'il reste une case vide sur le joueur
                 if joueur1=='alea' :
                     coup_IA_alea(var,2) #coup du joueur 1 (alea)
-                elif joueur1=='v1' :
-                    coup_IA_v1(var,D,2) #coup du joueur 1 (v1)
-                elif joueur1=='v1_comp' :
-                    coup_IA_v1_comp(var,D,D_comp,2) #coup du joueur 1 (v1_comp)
-                else :
-                    coup_IA_v1_train(var,2,n_sim) #coup du joueur 1 (v1_train)
+                elif joueur1 in ('v1','v2') :
+                    coup_IA(var,2,D1) #coup du joueur 1 (IA)
+                elif joueur1 in ('v1_comp','v2_comp') :
+                    coup_IA_comp(var,2,D1,D_comp1) #coup du joueur 1 (comp)
+                elif joueur1=='train' :
+                    coup_IA_train(version1,var,2,n_sim,n_sim_min,D1,D_prev1,alea) #coup du joueur 1 (train)
     Area=area(var.P) ###comptage des fois et gagnant###
     Score=[Area[0],Area[1]+var.Komi[var.N]]
     if Score[0]>Score[1] and joueur==1 or Score[1]>Score[0] and joueur==2 :
@@ -62,3 +79,4 @@ print('Joueur 1 gagne '+str(c)+' parties sur '+str(n_parties)+' ('+str(100*c/n_p
 #v1 vs v1 : 15.43 parties par seconde (sans load)
 #v1_comp vs v1_comp : 379 parties par seconde (sans load)
 #v1_train vs v1_train : 0.12 parties par seconde
+#Actuellement : v1 vs alea : 99,40% de victoire en 2x2, 98% en 3x3
