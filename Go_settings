@@ -1,9 +1,9 @@
 ##Importations
 import copy #pour les deepcopies
 import marshal #pour les sauvegardes locales
-from random import* #importation
+from random import* #pour les tests aléatoires
 
-##Class settings(N)
+##Class settings
 class settings : ###création de la classe settings pour l'attribution des variables utiles pour l'IA. Les autres variables qui ne servent qu'au joueur, le côté du joueur et le handicap, sont saisies au début de Go_main.py###
     def __init__(self,N) :
         self.N=N #taille du goban
@@ -61,7 +61,7 @@ def coup_IA_alea(var,IA) : ###structure du coup de l'IA (joue aléatoirement)###
         Cases_copy.remove(coup) #on enlève le coup non valide pour ne pas le reprendre
         n=int(random()*len(Cases_copy)) #et on en reprend un
         coup=Cases_copy[n]
-        valide=est_valide(var,coup,IA)
+        valide=est_valide(var,coup,IA) #fonction est_valide en bas (partie 1 du coup)
     if valide[0]==False : #si aucun coup n'est valide
         ans='pas de coup possible.'
         var.Cases=[] #la partie s'arrête
@@ -70,7 +70,45 @@ def coup_IA_alea(var,IA) : ###structure du coup de l'IA (joue aléatoirement)###
         jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
     return(ans)
 
-def coup_IA_v1(var,D,IA) : ###structure du coup de l'IA selon v1, profondeur=1 pour l'instant###
+def coup_IA_semialea(var,IA,D_prev,seuil) : ###structure du coup de l'IA semi-aléatoire (sert pour l'entraînement en versions v2 et plus)###
+    Value=[] #liste des "valeurs" des coups (% de victoire estimé après ce coup)
+    Cases_valides=[]
+    for k in range(len(var.Cases)) :
+        coup=var.Cases[k]
+        valide=est_valide(var,coup,IA) #fonction est_valide en bas (partie 1 du coup)
+        if valide[0]==True : #si le coup est valide, on prend sa "value"
+            Cases_valides.append(coup)
+            var_copy=copy.deepcopy(var)
+            jouer_coup(var_copy,valide,coup,IA)  #fonction jouer_coup en bas (partie 2 du coup)
+            if indice(var_copy.P,3-IA) in D_prev :
+                (n_win,n_tot)=D_prev[indice(var_copy.P,3-IA)]
+                value_coup=1-n_win/n_tot
+                Value.append(value_coup)
+            else :
+                Value.append(-1)
+        else :
+            Value.append(-1)
+    M=max(Value)
+    if Cases_valides==[] : #si aucun coup n'est valide
+        ans='pas de coup possible.'
+        var.Cases=[] #la partie s'arrête
+    elif M==-1 : #s'il n'y a pas eu de tests pour cette position
+        n=int(random()*len(Cases_valides)) #case aléatoire
+        ans=Cases_valides[n]
+        valide=est_valide(var,ans,IA) #fonction est_valide en bas (partie 1 du coup)
+        jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
+    else : #s'il y a un coup valide qui a été testé
+        Coups_corrects=[]
+        for k in range(len(var.Cases)) :
+            if Value[k]>=seuil*M :
+                Coups_corrects.append(var.Cases[k])
+        n=int(random()*len(Coups_corrects)) #case aléatoire parmi les coups corrects
+        ans=Coups_corrects[n]
+        valide=est_valide(var,ans,IA) #fonction est_valide en bas (partie 1 du coup)
+        jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
+    return(ans)
+
+def coup_IA(var,IA,D) : ###structure du coup de l'IA (joue à partir des tests contenus dans D)###
     meilleur_coup='' #meilleur coup retenu
     value=-1 #"valeur" de ce coup (% de victoire estimé après ce coup)
     Cases_valides=[]
@@ -87,58 +125,82 @@ def coup_IA_v1(var,D,IA) : ###structure du coup de l'IA selon v1, profondeur=1 p
                 if value_coup>value :
                     value=value_coup
                     meilleur_coup=coup
-    if Cases_valides!=[] and meilleur_coup=='' : #s'il n'y a pas eu de tests pour cette position
-        n=int(random()*len(Cases_valides)) #case aléatoire
-        meilleur_coup=Cases_valides[n]
     if Cases_valides==[] : #si aucun coup n'est valide
         ans='pas de coup possible.'
         var.Cases=[] #la partie s'arrête
-    else : #s'il y a un coup valide
-        valide_meilleur=est_valide(var,meilleur_coup,IA)
+    elif meilleur_coup=='' : #s'il n'y a pas eu de tests pour cette position
+        n=int(random()*len(Cases_valides)) #case aléatoire
+        ans=Cases_valides[n]
+        valide=est_valide(var,ans,IA) #fonction est_valide en bas (partie 1 du coup)
+        jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
+    else : #s'il y a un coup valide qui a été testé
         ans=meilleur_coup
+        valide_meilleur=est_valide(var,ans,IA) #fonction est_valide en bas (partie 1 du coup)
         jouer_coup(var,valide_meilleur,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
     return(ans)
 
-def coup_IA_v1_comp(var,D,D_comp,IA) : ###structure du coup de l'IA selon v1 (avec le dict compressé)###
-    ans=D_comp[indice(var.P,IA)]
-    if ans=='pas de simulations' :
-        ans=coup_IA_v1(P,D,IA)
-    elif ans=='pas de coup possible.' :
-        var.Cases=[] #la partie s'arrête
-    else : #ans est un coup
-        valide=est_valide(var,ans,IA) #fonction est_valide en bas (partie 1 du coup)
-        if valide[0]==False : #il faut revérifier la validié du coup (D_comp ne vérifie pas la règle du ko/superko car il n'a pas les positions précédentes)
-            ans=coup_IA_v1(var,D,IA)
-        else : #le coup donné par D_comp est valide
-            jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
+def coup_IA_comp(var,IA,D,D_comp) : ###structure du coup de l'IA plus rapide (avec le dictionnaire compressé)###
+    if indice(var.P,IA) in D_comp :
+        ans=D_comp[indice(var.P,IA)]
+        if ans=='pas de simulations' :
+            ans=coup_IA(var,IA,D)
+        elif ans=='pas de coup possible.' :
+            var.Cases=[] #la partie s'arrête
+        else : #ans est un coup
+            valide=est_valide(var,ans,IA) #fonction est_valide en bas (partie 1 du coup)
+            if valide[0]==False : #il faut revérifier la validié du coup (D_comp ne vérifie pas la règle du ko/superko car il n'a pas les positions précédentes)
+                ans=coup_IA(var,IA,D)
+            else : #le coup donné par D_comp est valide
+                jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
+    else :
+        ans=coup_IA_alea(var,IA)
     return(ans)
 
-def coup_IA_v1_train(var,IA,n_sim) : ###structure du coup de l'IA pour l'entraînement###
+def coup_IA_train(version,var,IA,n_sim,n_sim_min,D,D_prev,seuil,alea) : ###structure du coup de l'IA pour l'entraînement (dirigé vers les positions les plus probables)###
     meilleur_coup='' #meilleur coup retenu
     value=-1 #"valeur" de ce coup (% de victoire estimé après ce coup)
+    Cases_valides=[]
     D_coup={}
     for k in range(len(var.Cases)) :
         coup=var.Cases[k]
         valide=est_valide(var,coup,IA) #fonction est_valide en bas (partie 1 du coup)
         if valide[0]==True : #si le coup est valide, on cherche sa "value"
-            c=0
+            Cases_valides.append(coup)
             var_copy=copy.deepcopy(var)
             jouer_coup(var_copy,valide,coup,IA)  #fonction jouer_coup en bas (partie 2 du coup)
-            for l in range(n_sim) :
-                var_2=copy.deepcopy(var_copy)
-                if partie_alea(var_2,3-IA)==IA :
-                    c=c+1
-            D_coup[indice(var_copy.P,3-IA)]=n_sim-c #on sauvegarde les tests
-            if c>value : #si le coup est meilleur que celui qu'on avait retenu :
+            n_win=0
+            n_tot=0
+            if indice(var_copy.P,3-IA) in D :
+                (n_win,n_tot)=D[indice(var_copy.P,3-IA)]
+            if n_tot<n_sim_min : #si on veut faire plus de simulations pour cette position
+                c=0
+                for l in range(n_sim) :
+                    var_2=copy.deepcopy(var_copy)
+                    if version=='v1' :
+                        if partie('alea',var_2,3-IA,D_prev,seuil)==IA :
+                            c=c+1
+                    elif version=='v2' :
+                        if partie('semialea',var_2,3-IA,D_prev,seuil)==IA :
+                            c=c+1
+                D_coup[indice(var_copy.P,3-IA)]=n_sim-c #on sauvegarde les tests
+                value_coup=c/n_sim
+            else : #on a assez de simulations
+                value_coup=n_win/n_tot
+            if value_coup>value : #si le coup est meilleur que celui qu'on avait retenu :
                 meilleur_coup=coup #il devient le meilleur coup
-                value=c
-    if meilleur_coup=='' : #si aucun coup n'est valide
+                value=value_coup
+    if Cases_valides==[] : #si aucun coup n'est valide
         ans='pas de coup possible.'
         var.Cases=[] #la partie s'arrête
-    else : #s'il y a un coup valide
-        valide_meilleur=est_valide(var,meilleur_coup,IA)
+    elif alea==0 : #s'il y a un coup valide et alea=0
         ans=meilleur_coup
+        valide_meilleur=est_valide(var,ans,IA) #fonction est_valide en bas (partie 1 du coup)
         jouer_coup(var,valide_meilleur,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
+    else : #s'il y a un coup valide et alea=1
+        n=int(len(Cases_valides)*random())
+        ans=Cases_valides[n]
+        valide=est_valide(var,ans,IA) #fonction est_valide en bas (partie 1 du coup)
+        jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
     return(ans,D_coup)
 
 ##Exécution des coups
@@ -307,12 +369,18 @@ def area(P) : ###fonction pour compter les points (en area scoring)###
             area_blanc=area_blanc+len(chaine)
     return(area_noir,area_blanc)
 
-##Entraînement en v1
-def partie_alea(var,joueur) : ###simulation d'une partie entre IAs qui jouent aléatoirement###
+##Entraînement
+def partie(version,var,joueur,D_prev,seuil) : ###simulation d'une partie entre IAs qui jouent aléatoirement###
     while var.Cases!=[] : #tant qu'il reste des cases vides
-        coup_IA_alea(var,joueur) #joueur joue
+        if version=='alea' :
+            coup_IA_alea(var,joueur) #joueur joue
+        elif version=='semialea' :
+            coup_IA_semialea(var,joueur,D_prev,seuil)
         if len(var.Cases)>=1 : #s'il reste une case vide
-            coup_IA_alea(var,3-joueur) #l'autre joueur joue
+            if version=='alea' :
+                coup_IA_alea(var,3-joueur) #l'autre joueur joue
+            elif version=='semialea' :
+                coup_IA_semialea(var,3-joueur,D_prev,seuil)
     Area=area(var.P)
     Score=[Area[0],Area[1]+var.Komi[var.N]]
     if Score[0]>Score[1] :
@@ -323,17 +391,52 @@ def partie_alea(var,joueur) : ###simulation d'une partie entre IAs qui jouent al
 def indice(P,joueur) : ###fonction pour faciliter l'écriture des indices pour les dictionnaires sauvegardés###
     return((tuple([tuple(P[i]) for i in range(len(P))]),joueur))
     
-def train_v1(N,n_parties,n_sim,coups_avant_train) : ###pour simuler des parties aléatoires et sauvegarder les résultats localement###
-    D=marshal.load(open('train_v1_'+str(N),'rb')) #on récupère les tests qu'on a déja faits s'il y en a pour ne pas les perdre
+def train() : ###pour simuler des parties aléatoires et sauvegarder les résultats localement###
+    print('Version?')
+    version=input()
+    print(' ')
+    print('Taille du goban?')
+    N=int(input())
+    print(' ')
+    print('Nombre de parties à simuler?')
+    n_parties=int(input())
+    print(' ')
+    print('Nombre de simulations par coup?')
+    n_sim=int(input())
+    print(' ')
+    print('Nombre de coups avant de commencer l entraînement?')
+    coups_avant_train=int(input())
+    print(' ')
+    print('Nombre de simulations minimales voulues par position?')
+    n_sim_min=int(input())
+    print(' ')
+    print('Parties dirigées aléatoirement?')
+    alea=input()
+    if alea in ('alea','Alea','1','Oui','oui') :
+        alea=1
+    else :
+        alea=0
+    D=marshal.load(open('train_'+version+'_'+str(N),'rb')) #on récupère les tests qu'on a déja faits s'il y en a pour ne pas les perdre
+    if version=='v1' :
+        D_prev={}
+        seuil=0
+    elif version=='v2' :
+        D_prev=marshal.load(open('train_v1_'+str(N),'rb')) #dictionnaire de la version précédene
+        print(' ')
+        print('Seuil de prise en compte des coups?')
+        seuil=float(input())
     for i in range(n_parties) :
         var=settings(N) #on réinitialise var pour la partie suivante
         c=0
         while var.Cases!=[] : ###déroulement de la partie###
             if c<coups_avant_train :
-                coup_IA_v1(var,D,1) #coup de Noir
+                if alea==0 :
+                    coup_IA(var,1,D) #coup de Noir
+                else :
+                    coup_IA_alea(var,1)
                 D_coup={}
             else :
-                coup_1=coup_IA_v1_train(var,1,n_sim) #coup de Noir
+                coup_1=coup_IA_train(version,var,1,n_sim,n_sim_min,D,D_prev,seuil,alea) #coup de Noir
                 D_coup=coup_1[1]
             for ind in D_coup :
                 if ind in D :
@@ -346,10 +449,13 @@ def train_v1(N,n_parties,n_sim,coups_avant_train) : ###pour simuler des parties 
             c=c+1
             if len(var.Cases)>=1 : #s'il reste une case vide pour Blanc
                 if c<coups_avant_train :
-                    coup_IA_v1(var,D,2) #coup de Blanc
+                    if alea==0 :
+                        coup_IA(var,2,D) #coup de Blanc
+                    else :
+                        coup_IA_alea(var,2)
                     D_coup={}
                 else :
-                    coup_2=coup_IA_v1_train(var,2,n_sim) #coup de Blanc
+                    coup_2=coup_IA_train(version,var,2,n_sim,n_sim_min,D,D_prev,seuil,alea) #coup de Blanc
                     D_coup=coup_2[1]
                 for ind in D_coup :
                     if ind in D :
@@ -360,7 +466,7 @@ def train_v1(N,n_parties,n_sim,coups_avant_train) : ###pour simuler des parties 
                     else :
                         D[ind]=(D_coup[ind],n_sim)
                 c=c+1
-    marshal.dump(D,open('train_v1_'+str(N),'wb')) #on sauvegarde les données
+    marshal.dump(D,open('train_'+version+'_'+str(N),'wb')) #on sauvegarde les données
 
 ##Compression des dictionnaires locaux
 def liste_chaines(P,joueur) : ###fonction pour construire la liste des chaines de cases du joueur en argument dans P (joueur=0 pour les cases vides)###
@@ -434,12 +540,12 @@ def compress(N) : ###fonction pour "compresser" le dictionnaire local : on assoc
     D[indice([[0 for j in range(N)] for i in range(N)],1)]=(0,0) #il faut avoir la position initiale en indice de D...
     D_comp={}
     c=0
-    p=0
+    p=-1
     n=len(D)
     for ind in D : #...pour qu'ind prenne cette valeur et que D_comp contienne la solution au coup initial
-        if c>=int(n*p/100) :
-            print(str(p)+'%')
-            p=p+1
+        if int(100*c/n)>p :
+            print(str(int(100*c/n))+'%')
+            p=int(100*c/n)
         meilleur_coup='' #meilleur coup retenu
         value=-1 #"valeur" de ce coup (% de victoire estimé après ce coup)
         var=settings(N)
