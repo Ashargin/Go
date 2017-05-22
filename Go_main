@@ -27,6 +27,7 @@ while var.Cases!=[] and c_handicap<handicap-1 : ###phase d'handicap###
         coup_IA=coup_IA_comp(var,IA,D,D_comp)
         print(' ')
         print('IA : '+str(coup_IA))
+        show_goban(var.P)
     c_handicap=c_handicap+1
 while var.Cases!=[] : ###déroulement de la partie###
     if humain==1 : #si le joueur humain joue Noir
@@ -35,10 +36,12 @@ while var.Cases!=[] : ###déroulement de la partie###
         if len(var.Cases)>=1 : #s'il reste une case vide pour l'IA
             coup_IA=coup_IA_comp(var,2,D,D_comp) #coup de l'IA
             print('IA : '+str(coup_IA))
+            show_goban(var.P)
     else : #si le joueur humain joue Blanc
         coup_IA=coup_IA_comp(var,1,D,D_comp) #coup de l'IA
         print(' ')
         print('IA : '+str(coup_IA))
+        show_goban(var.P)
         if len(var.Cases)>=1 : #s'il reste une case vide sur le joueur
             coup_humain(var,2) #coup du joueur
 Area=area(var.P) ###comptage des fois et gagnant###
