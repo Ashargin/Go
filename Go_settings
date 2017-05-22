@@ -2,6 +2,7 @@
 import copy #pour les deepcopies
 import marshal #pour les sauvegardes locales
 from random import* #pour les tests aléatoires
+import time
 
 ##Class settings
 class settings : ###création de la classe settings pour l'attribution des variables utiles pour l'IA. Les autres variables qui ne servent qu'au joueur, le côté du joueur et le handicap, sont saisies au début de Go_main.py###
@@ -148,7 +149,7 @@ def coup_IA_comp(var,IA,D,D_comp) : ###structure du coup de l'IA plus rapide (av
             var.Cases=[] #la partie s'arrête
         else : #ans est un coup
             valide=est_valide(var,ans,IA) #fonction est_valide en bas (partie 1 du coup)
-            if valide[0]==False : #il faut revérifier la validié du coup (D_comp ne vérifie pas la règle du ko/superko car il n'a pas les positions précédentes)
+            if valide[0]==False : #il faut revérifier la validité du coup (D_comp ne vérifie pas la règle du ko/superko car il n'a pas les positions précédentes)
                 ans=coup_IA(var,IA,D)
             else : #le coup donné par D_comp est valide
                 jouer_coup(var,valide,ans,IA) #fonction jouer_coup en bas (partie 2 du coup)
@@ -398,8 +399,8 @@ def train() : ###pour simuler des parties aléatoires et sauvegarder les résult
     print('Taille du goban?')
     N=int(input())
     print(' ')
-    print('Nombre de parties à simuler?')
-    n_parties=int(input())
+    print('Temps de simulation (minutes)?')
+    temps=float(input())
     print(' ')
     print('Nombre de simulations par coup?')
     n_sim=int(input())
@@ -425,7 +426,9 @@ def train() : ###pour simuler des parties aléatoires et sauvegarder les résult
         print(' ')
         print('Seuil de prise en compte des coups?')
         seuil=float(input())
-    for i in range(n_parties) :
+    t_init=time.time()
+    t=time.time()
+    while t-t_init<=60*temps :
         var=settings(N) #on réinitialise var pour la partie suivante
         c=0
         while var.Cases!=[] : ###déroulement de la partie###
@@ -466,6 +469,7 @@ def train() : ###pour simuler des parties aléatoires et sauvegarder les résult
                     else :
                         D[ind]=(D_coup[ind],n_sim)
                 c=c+1
+        t=time.time()
     marshal.dump(D,open('train_'+version+'_'+str(N),'wb')) #on sauvegarde les données
 
 ##Compression des dictionnaires locaux
@@ -581,3 +585,22 @@ def compress(N) : ###fonction pour "compresser" le dictionnaire local : on assoc
         c=c+1
     print('100%')
     marshal.dump(D_comp,open('train_v1_'+str(N)+'_comp','wb'))
+
+##Interface
+def show_goban(a): ###fonction pour afficher le goban de manière lisible###
+    res = "   "
+    for i in range(len(a[0])) :
+        res += str(i+1)+" " #pour afficher les colonnes
+    res += "\n"
+    for i in range(len(a)):
+        res += str(i+1) + " " #pour afficher les lignes
+        for j in range(len(a[i])):
+            res += "|"
+            if (a[i][j] == 1):
+                res += "X" #cases noires
+            elif (a[i][j] == 2):
+                res += "0" #cases blanches
+            else:
+                res += "_" #cases vides
+        res += "|\n"
+    print(res)
