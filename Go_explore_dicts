@@ -1,8 +1,8 @@
 import marshal
-N=3
+N=2
 version='v1'
 n_sim_min=5000
-afficher_détails='non'
+afficher_détails='oui'
 if version=='v1' :
     D=marshal.load(open('train_v1_'+str(N),'rb'))
 elif version=='v2' :
