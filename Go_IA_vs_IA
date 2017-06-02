@@ -29,7 +29,7 @@ if joueur2=='v1_train' :
 elif joueur2=='v2_train' :
     D_prev2=marshal.load(open('train_v1_'+str(N),'rb'))
 def coup(player,n_joueur) :
-    if player == 'alea':
+    if player=='alea':
         if n_joueur==1 :
             return(lambda *args: coup_IA_alea(var,joueur)) #et ça dépend aussi de joueur
         elif n_joueur==2 :
@@ -53,12 +53,12 @@ fonction1=coup(joueur1,1)
 fonction2=coup(joueur2,2)
 for i in range(n_parties) :
     var=settings(N)
-    if joueur == 1:
+    if joueur==1:
       def player_begin():
           fonction1()
       def other_player():
           fonction2()
-    elif joueur == 2:
+    elif joueur==2:
         def player_begin():
             fonction2()
         def other_player():
