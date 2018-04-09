@@ -1,7 +1,7 @@
 N=2 ###initialisation###
-n_parties=100000
+n_parties=10000
 joueur1='v1_comp' #à choisir parmi ('alea','v1','v1_comp','v1_train','v2','v2_comp','v2_train')
-joueur2='v1_comp'
+joueur2='alea'
 n_sim=50
 n_sim_min=5000
 alea=0
@@ -16,18 +16,18 @@ if joueur2 in ('v1','v1_comp','v1_train') :
     version2='v1'
 else :
     version2='v2'
-D1=marshal.load(open('train_'+version1+'_'+str(N),'rb'))
-D_comp1=marshal.load(open('train_'+version1+'_'+str(N)+'_comp','rb'))
+D1=marshal.load(open('learned_dicts\train_'+version1+'_'+str(N),'rb'))
+D_comp1=marshal.load(open('learned_dicts\train_'+version1+'_'+str(N)+'_comp','rb'))
 if joueur1=='v1_train' :
     D_prev1={}
 elif joueur1=='v2_train' :
-    D_prev1=marshal.load(open('train_v1_'+str(N),'rb'))
-D2=marshal.load(open('train_'+version2+'_'+str(N),'rb'))
-D_comp2=marshal.load(open('train_'+version2+'_'+str(N)+'_comp','rb'))
+    D_prev1=marshal.load(open('learned_dicts\train_v1_'+str(N),'rb'))
+D2=marshal.load(open('learned_dicts\train_'+version2+'_'+str(N),'rb'))
+D_comp2=marshal.load(open('learned_dicts\train_'+version2+'_'+str(N)+'_comp','rb'))
 if joueur2=='v1_train' :
     D_prev2={}
 elif joueur2=='v2_train' :
-    D_prev2=marshal.load(open('train_v1_'+str(N),'rb'))
+    D_prev2=marshal.load(open('learned_dicts\train_v1_'+str(N),'rb'))
 def coup(player,n_joueur) :
     if player=='alea':
         if n_joueur==1 :

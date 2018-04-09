@@ -17,8 +17,8 @@ print(' ')
 print('Handicap?') #si on veut ajouter un handicap
 handicap=int(input())
 c_handicap=0
-D=marshal.load(open('train_v1_'+str(var.N),'rb')) #on récupère les tests qu'on a déja faits
-D_comp=marshal.load(open('train_v1_'+str(var.N)+'_comp','rb'))
+D=marshal.load(open('learned_dicts\train_v1_'+str(var.N),'rb')) #on récupère les tests qu'on a déja faits
+D_comp=marshal.load(open('learned_dicts\train_v1_'+str(var.N)+'_comp','rb'))
 while var.Cases!=[] and c_handicap<handicap-1 : ###phase d'handicap###
     if humain==1 :
         print(' ')

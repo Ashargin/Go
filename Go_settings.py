@@ -417,12 +417,12 @@ def train() : ###pour simuler des parties aléatoires et sauvegarder les résult
         alea=1
     else :
         alea=0
-    D=marshal.load(open('train_'+version+'_'+str(N),'rb')) #on récupère les tests qu'on a déja faits s'il y en a pour ne pas les perdre
+    D=marshal.load(open('learned_dicts\train_'+version+'_'+str(N),'rb')) #on récupère les tests qu'on a déja faits s'il y en a pour ne pas les perdre
     if version=='v1' :
         D_prev={}
         seuil=0
     elif version=='v2' :
-        D_prev=marshal.load(open('train_v1_'+str(N),'rb')) #dictionnaire de la version précédene
+        D_prev=marshal.load(open('learned_dicts\train_v1_'+str(N),'rb')) #dictionnaire de la version précédene
         print(' ')
         print('Seuil de prise en compte des coups?')
         seuil=float(input())
@@ -470,7 +470,7 @@ def train() : ###pour simuler des parties aléatoires et sauvegarder les résult
                         D[ind]=(D_coup[ind],n_sim)
                 c=c+1
         t=time.time()
-    marshal.dump(D,open('train_'+version+'_'+str(N),'wb')) #on sauvegarde les données
+    marshal.dump(D,open('learned_dicts\train_'+version+'_'+str(N),'wb')) #on sauvegarde les données
 
 ##Compression des dictionnaires locaux
 def liste_chaines(P,joueur) : ###fonction pour construire la liste des chaines de cases du joueur en argument dans P (joueur=0 pour les cases vides)###
@@ -539,8 +539,8 @@ def dict_chaines(P) : ###fonction pour construire l'attribut Chaines de settings
             Chaines[case]=[copy.copy(libertés)]+chaine
     return(Chaines)
 
-def compress(N) : ###fonction pour "compresser" le dictionnaire local : on associe à chaque position le meilleur coup possible pour ne pas le faire pendant le coup de l'IA###
-    D=marshal.load(open('train_v1_'+str(N),'rb')) #on récupère les tests qu'on a déja faits
+def compress(N,version) : ###fonction pour "compresser" le dictionnaire local : on associe à chaque position le meilleur coup possible pour ne pas le faire pendant le coup de l'IA###
+    D=marshal.load(open('learned_dicts\train_'+version+'_'+str(N),'rb')) #on récupère les tests qu'on a déja faits
     D[indice([[0 for j in range(N)] for i in range(N)],1)]=(0,0) #il faut avoir la position initiale en indice de D...
     D_comp={}
     c=0
@@ -584,7 +584,7 @@ def compress(N) : ###fonction pour "compresser" le dictionnaire local : on assoc
         D_comp[ind]=ans
         c=c+1
     print('100%')
-    marshal.dump(D_comp,open('train_v1_'+str(N)+'_comp','wb'))
+    marshal.dump(D_comp,open('learned_dicts\train_'+version+'_'+str(N)+'_comp','wb'))
 
 ##Interface
 def show_goban(a): ###fonction pour afficher le goban de manière lisible###

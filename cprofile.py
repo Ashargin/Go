@@ -1,3 +1,5 @@
 import cProfile
 from Go_settings import*
-cProfile.run('train()',sort='tottime')
+def test() :
+    import Go_IA_vs_IA
+cProfile.run('test()',sort='tottime')

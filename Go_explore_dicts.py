@@ -2,11 +2,11 @@ import marshal
 N=2
 version='v1'
 n_sim_min=5000
-afficher_détails='oui'
+afficher_détails='non'
 if version=='v1' :
-    D=marshal.load(open('train_v1_'+str(N),'rb'))
+    D=marshal.load(open('learned_dicts\train_v1_'+str(N),'rb'))
 elif version=='v2' :
-    D=marshal.load(open('train_v2_'+str(N),'rb'))
+    D=marshal.load(open('learned_dicts\train_v2_'+str(N),'rb'))
 D2={}
 Pos={}
 for i in range(1,N**2) :
